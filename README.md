@@ -3,30 +3,30 @@
 </p>
 <p align="center"><i>(Todo: replace with better photo)</i></p>
 
-# M: The Everything Pedal
+# Kestrel
 
-**M** is a programmable digital effects pedal.
+**Kestrel** is a programmable digital effects pedal.
 
 It is designed to be:
 
 - **Easy to use** — drag-and-drop effects, turn knobs, press buttons.
 - **Extremely powerful** — a real-time programmable DSP platform capable of complex audio processing pipelines.
 
-Under the hood, M combines a custom FPGA DSP engine with a touchscreen interface and a flexible, modular effect description system.
+Under the hood, Kestrel combines Kestrel Core, Kestrel Interface, and a flexible, modular effect description system.
 
 ---
 
 # System Architecture
 
-M consists of three major components:
+Kestrel consists of three major components:
 
-- **MCU control system** running [M-interface](https://github.com/linkin-parks-bassist/m-interface)  
+- **MCU control system** running [Kestrel Interface](https://github.com/linkin-parks-bassist/kestrel-interface)  
   (UI, control logic, effect compiler)
 
-- **FPGA DSP engine** running [M-FPGA](https://github.com/linkin-parks-bassist/m-fpga)  
+- **FPGA DSP engine** running [Kestrel Core](https://github.com/linkin-parks-bassist/kestrel-core)  
   (high-performance programmable audio processing)
 
-- **Hardware platform** on [carrier PCB](https://github.com/linkin-parks-bassist/m-pcb)
+- **Hardware platform** on [Kestrel PCB](https://github.com/linkin-parks-bassist/kestrel-pcb)
   including the touchscreen interface, power system, and audio I/O.
 
 ### Hardware stack
@@ -36,7 +36,7 @@ The current prototype uses the following hardware modules:
 - **Sipeed Tang Nano 20K** — FPGA DSP core  
 - **Waveshare ESP32-P4-Pico** — UI and control processor  
 - **Waveshare DSI-TOUCH-5A** — 5" MIPI-DSI touchscreen display  
-- **M-PCB** — carrier board integrating audio codec (SGTL5000), power, audio I/O and module interconnects
+- **Kestrel PCB** — carrier board integrating audio codec (SGTL5000), power, audio I/O and module interconnects
 
 ---
 
@@ -64,7 +64,7 @@ Effects are defined using **effect descriptor (`.eff`) files**, a small DSL that
 
 Example:
 
-```
+```text
 v1.0
 
 .INFO
@@ -139,15 +139,15 @@ The UI is generated automatically from these files.
 Audio flows through the system as follows:
 
 1. Audio enters via the codec over **I2S**
-2. The FPGA executes DSP instructions on each sample
-3. The MCU configures and updates the DSP engine via **SPI**
+2. Kestrel Core executes DSP instructions on each sample
+3. Kestrel Interface configures and updates the DSP engine via **SPI**
 4. The UI allows users to create and control processing pipelines in real time
 
 ---
 
-# [M-interface](https://github.com/linkin-parks-bassist/m-interface)
+# [Kestrel Interface](https://github.com/linkin-parks-bassist/kestrel-interface)
 
-M-interface is the control system and compiler for **M: The Everything Pedal**.
+Kestrel Interface is the control system and compiler for **Kestrel**.
 
 It uses **FreeRTOS** and **LVGL** to provide the touchscreen UI used to create, edit and manage effect chains.
 
@@ -172,13 +172,13 @@ The display subsystem uses the Waveshare board support package for **ESP32-P4-Na
 
 Build:
 
-```
+```bash
 idf.py build
 ```
 
 Flash:
 
-```
+```bash
 idf.py flash
 ```
 
@@ -190,39 +190,39 @@ A demo interface runs on POSIX systems.
 
 Build:
 
-```
+```bash
 make
 ```
 
 Run:
 
-```
-./M
+```bash
+./kest
 ```
 
 Build shared library:
 
-```
+```bash
 make lib
 ```
 
 Install:
 
-```
+```bash
 sudo make lib_install
 ```
 
 Include:
 
-```
-#include <libM/m_lib.h>
+```c
+#include <libkest/kest_lib.h>
 ```
 
-and link with `-lM`.
+and link with `-lkest`.
 
 ---
 
-# [M-FPGA](https://github.com/linkin-parks-bassist/m-fpga)
+# [Kestrel Core](https://github.com/linkin-parks-bassist/kestrel-core)
 
 <p align="center">
   <img src="docs/resources/M-fpga.svg" alt="Global schematic" width="60%">
