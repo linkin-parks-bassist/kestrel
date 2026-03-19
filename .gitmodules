@@ -1,9 +1,9 @@
 [submodule "m-fpga"]
-	path = m-fpga
+	path = kestrel_core
 	url = https://github.com/linkin-parks-bassist/m-fpga.git
 [submodule "m-interface"]
-	path = m-interface
+	path = kestrel_interface
 	url = https://github.com/linkin-parks-bassist/m-interface.git
 [submodule "m-pcb"]
-	path = m-pcb
+	path = kestrel_pcb
 	url = https://github.com/linkin-parks-bassist/m-pcb.git
