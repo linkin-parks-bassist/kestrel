@@ -1,11 +1,12 @@
 <p align="center">
   <img src="docs/resources/image.jpg" alt="Image" width="80%">
 </p>
-<p align="center"><i>(Todo: replace with better photo)</i></p>
+
+[Watch the demo](https://www.youtube.com/watch?v=e2wT8DbJjVs)
 
 # Kestrel
 
-**Kestrel** is a programmable digital effects pedal.
+**Kestrel** is a programmable digital effects pedal. 
 
 It is designed to be:
 
