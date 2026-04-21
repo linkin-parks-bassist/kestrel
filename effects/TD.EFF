@@ -1,0 +1,16 @@
+v1.0
+
+.INFO
+
+name: "Tanh Distortion"
+
+.PARAMETERS
+
+pre_gain:  (name: "Pre-gain",  default: 0, min: -24, max: 24, units: "dB")
+post_gain: (name: "Post-gain", default: 0, min: -24, max: 24, units: "dB")
+
+.CODE
+
+mul c0 [0.25 * (10^(pre_gain/20))] c0
+tanh4 c0 c0
+mul c0 [10^(post_gain/20)] c0

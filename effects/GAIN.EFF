@@ -1,0 +1,13 @@
+v1.0
+
+.INFO
+
+name: "Gain"
+
+.PARAMETERS
+
+gain: (name: "Gain", default: 5.0, min: -24.0, max: 24.0, units: "dB")
+
+.CODE
+
+mul c0 [10^(gain/20)] c0

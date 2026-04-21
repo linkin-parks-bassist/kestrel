@@ -70,50 +70,28 @@ v1.0
 .INFO
 
 name: "Low Pass Filter"
-cname: "example_low_pass_filter"
 
 .PARAMETERS
 
 cutoff: (name: "Cutoff",
          default: 1000,
-         min: 60,
-         max: sample_rate / 2 - 1,
-         units: "Hz",
-         scale = "logarithmic")
-Q: (name: "Resonance", default: 1 / sqrt(2), min: 0.1, max: 3)
+         min:     30,
+         max:     sample_rate / 2 - 1,
+         units:   "Hz",
+         scale:   "logarithmic")
 
-.DEFS
-
-omega: 2 * pi * cutoff / sample_rate
-alpha: sin(omega) / (2 * Q)
+Q: (name:    "Resonance",
+    default: 1 / sqrt(2),
+    min:     0.1,
+    max:     3)
 
 .RESOURCES
 
-x1: (type: "mem")
-x2: (type: "mem")
-y1: (type: "mem")
-y2: (type: "mem")
+lpf1: (type: "lpf", cutoff: cutoff, Q: Q)
 
 .CODE
 
-mem_read c1 $x1
-mem_read c2 $x2
-mem_read c3 $y1
-mem_read c4 $y2
-
-macz [(1/2) * (1 - cos(omega)) / (1 + alpha)] c0
-mac  [        (1 - cos(omega)) / (1 + alpha)] c1
-mac  [(1/2) * (1 - cos(omega)) / (1 + alpha)] c2
-mac  [        (2 * cos(omega)) / (1 + alpha)] c3
-mac  [             (alpha - 1) / (1 + alpha)] c4
-
-mem_write $x2 c1
-mem_write $x1 c0
-mem_write $y2 c3
-
-mov_acc c0
-
-mem_write $y1 c0
+filter c0 $lpf1 c0
 ```
 
 The UI is generated automatically from these files.
@@ -133,7 +111,7 @@ The UI is generated automatically from these files.
 # System Overview
 
 <p align="center">
-  <img src="docs/resources/M-stack.svg" alt="Image" width="50%">
+  <img src="docs/resources/kestrel_overview.svg" alt="Image" width="50%">
 </p>
 
 Audio flows through the system as follows:

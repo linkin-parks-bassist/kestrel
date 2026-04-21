@@ -1,0 +1,65 @@
+v1.0
+
+.INFO
+
+name: "Auto-Wah"
+
+.PARAMETERS
+
+f_min:  (name: "Min Center", default: 250,  min: 30,    max: f_max, 	  units: "Hz", scale: "logarithmic", group: 0)
+f_max:  (name: "Max Center", default: 1000, min: f_min, max: f_min * 10,  units: "Hz", scale: "logarithmic", group: 0)
+attack: (name: "Attack", default: 200, min: 1, 			max: 400,   	  units: "ms", scale: "logarithmic", group: 1)
+decay:  (name: "Decay",  default: 80,  min: 1, 			max: 400,   	  units: "ms", scale: "logarithmic", group: 1)
+
+Q:  	(name: "Damping",     default: 0.5, min: 0.1, max: 2-2^(-15))
+sens:	(name: "Sensitivity", default: 2.0, min: 0,   max: 4.0)
+
+.DEFS
+
+ratio: f_max / f_min
+beta_a: exp(-(1000 / (attack * sample_rate)))
+alpha_a: 1 - beta_a
+
+beta_d: exp(-(1000 / (decay * sample_rate)))
+alpha_d: 1 - beta_d
+
+.RESOURCES
+
+envelope: (type: "mem")
+
+.CODE
+
+abs c0 c1
+
+mem_read  $envelope c2
+mul 	  c2 [beta_a] c3
+madd  	  c1 [alpha_a] c3 c3
+mul 	  c2 [beta_d] c4
+madd  	  c1 [alpha_d] c4 c4
+max c3 c4 c1
+mem_write c1 $envelope
+
+mul c1 [sens] c1
+
+mul c1 [log10(ratio)] c2
+mov c2 c3
+
+macz c2 [(f_min / sample_rate) * ln(10)]
+mul  c2 c3 c2
+mac  c2 [(f_min / sample_rate) * ln(10)^2 / 2]
+mul  c2 c3 c2
+mac  c2 [(f_min / sample_rate) * ln(10)^3 / 6]
+mul  c2 c3 c2
+mac  c2 [(f_min / sample_rate) * ln(10)^4 / 24]
+
+mov_acc c4
+
+madd c4 [0.5] [0.5 * f_min / sample_rate] c5
+
+sin2pi c5 c6
+mul [2] c6 c6
+
+svf c0 c6 [Q]
+svf_band c7
+
+mov c7 c0

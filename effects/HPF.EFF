@@ -1,0 +1,19 @@
+v1.0
+
+.INFO
+
+name: "High Pass Filter"
+
+
+.PARAMETERS
+
+cutoff: (name: "Cutoff", default: 1000, min: 30, max: sample_rate / 2 - 1, units: "Hz", scale = "logarithmic")
+Q:      (name: "Resonance", default: 1 / sqrt(2), min: 0.5, max: 3)
+
+.RESOURCES
+
+f: (type: "hpf", cutoff: cutoff, Q: Q)
+
+.CODE
+
+filter c0 $f c0
