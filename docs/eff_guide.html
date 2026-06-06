@@ -96,6 +96,8 @@
     <h2>The Shape of a Descriptor</h2>
     <p>Every descriptor starts with the exact version marker <code>v1.0</code>, then a set of named sections. The current parser recognizes <code>.INFO</code>, <code>.RESOURCES</code>, <code>.PARAMETERS</code>, <code>.SETTINGS</code>, <code>.DEFS</code>, and <code>.CODE</code>. The metadata sections are dictionary-like: they contain named entries, strings, expressions, nested dictionaries, and lists. The code section is different: it is an assembly-like list of DSP instructions. During loading, the firmware parses the metadata first, builds a scope of parameters, settings, resources, and helper expressions, and then parses the code against that scope.</p>
 
+    <p>On the device, effect descriptor files live on the SD card under <code>/sdcard/eff</code>. At boot, the firmware scans that directory and processes the <code>.eff</code> files it finds there, turning each valid descriptor into an available effect. In normal use, adding an effect means copying its descriptor into that directory and rebooting or otherwise triggering the same effect-loading path.</p>
+
 <pre><code>v1.0
 
 .INFO
@@ -310,6 +312,93 @@ filter: (
 
 .CODE
 filter c0 $filter c0
+</code></pre>
+
+    <h2>A More Advanced Example: 3-Band EQ</h2>
+    <p>A descriptor can also build a larger signal path out of several filters and a few accumulator instructions. This three-band equaliser splits the mono input into bass, mid, and high bands, applies a dB gain control to each band, and sums the result back into <code>c0</code>. The bass band is made with cascaded low-pass filters, the upper path is made with cascaded high-pass filters, and the mid/high split happens at a second crossover. The gain expressions use the standard dB-to-linear conversion <code>10^(dB/20)</code>.</p>
+
+<pre><code>v1.0
+
+.INFO
+name: "3-Band Equaliser"
+
+.PARAMETERS
+bass: (
+  name: "Bass"
+  default: 0
+  min: -12
+  max: 12
+  widget: "vslider_tall"
+  units: "dB"
+  group: 2
+)
+
+mids: (
+  name: "Mids"
+  default: 0
+  min: -12
+  max: 12
+  widget: "vslider_tall"
+  units: "dB"
+  group: 2
+)
+
+high: (
+  name: "High"
+  default: 0
+  min: -12
+  max: 12
+  widget: "vslider_tall"
+  units: "dB"
+  group: 2
+)
+
+.SETTINGS
+low_co: (
+  name: "Bass Crossover"
+  type: "int"
+  default: 250
+  min: 30
+  max: 22000
+  group: 0
+  page: "main"
+)
+
+high_co: (
+  name: "Treble Crossover"
+  type: "int"
+  default: 1000
+  min: 30
+  max: 22000
+  group: 1
+  page: "main"
+)
+
+.RESOURCES
+LP1: (type: "lpf", cutoff: low_co,  Q: 1/sqrt(2))
+LP2: (type: "lpf", cutoff: low_co,  Q: 1/sqrt(2))
+HP1: (type: "hpf", cutoff: low_co,  Q: 1/sqrt(2))
+HP2: (type: "hpf", cutoff: low_co,  Q: 1/sqrt(2))
+LP3: (type: "lpf", cutoff: high_co, Q: 1/sqrt(2))
+LP4: (type: "lpf", cutoff: high_co, Q: 1/sqrt(2))
+HP3: (type: "hpf", cutoff: high_co, Q: 1/sqrt(2))
+HP4: (type: "hpf", cutoff: high_co, Q: 1/sqrt(2))
+
+.CODE
+filter c0 $LP1 c1
+fcasc     $LP2 c1
+filter c0 $HP1 c2
+fcasc     $HP2 c2
+fcasc     $LP3 c3
+fcasc     $LP4 c3
+filter c2 $HP3 c4
+fcasc     $HP4 c4
+
+macz c1 [10^(bass/20)]
+mac  c3 [10^(mids/20)]
+mac  c4 [10^(high/20)]
+
+mov_acc c0
 </code></pre>
 
     <h2>Working Method</h2>
