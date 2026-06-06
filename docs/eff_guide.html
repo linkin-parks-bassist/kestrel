@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kestrel Effect Descriptor Programming Guide</title>
+  <style>
+    body {
+      margin: 0;
+      background: #f7f4ed;
+      color: #24201a;
+      font: 18px/1.65 Georgia, "Times New Roman", serif;
+    }
+    main {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 64px 28px 96px;
+    }
+    h1 {
+      font-size: clamp(2.2rem, 5vw, 4rem);
+      line-height: 1.05;
+      margin: 0 0 20px;
+      font-weight: 600;
+    }
+    p {
+      margin: 0 0 1.1em;
+    }
+    h2 {
+      font-size: 1.65rem;
+      line-height: 1.2;
+      margin: 2.2em 0 0.55em;
+      font-weight: 600;
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      font-size: 0.92em;
+      background: #ede7da;
+      padding: 0.08em 0.28em;
+      border-radius: 3px;
+    }
+    pre {
+      overflow-x: auto;
+      margin: 1.2em 0 1.7em;
+      padding: 18px 20px;
+      background: #27221d;
+      color: #f8f1e4;
+      border-left: 5px solid #9f6b32;
+      font: 0.9rem/1.55 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    }
+    pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+      border-radius: 0;
+      font-size: inherit;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1em 0 1.8em;
+      font-size: 0.95rem;
+      line-height: 1.45;
+    }
+    th, td {
+      text-align: left;
+      vertical-align: top;
+      padding: 10px 12px;
+      border-bottom: 1px solid #d8ccb8;
+    }
+    th {
+      background: #e8ddca;
+      font-weight: 600;
+    }
+    .lede {
+      font-size: 1.08em;
+    }
+    .note {
+      margin: 1.2em 0 1.7em;
+      padding: 14px 18px;
+      background: #efe8da;
+      border-left: 4px solid #7d684b;
+    }
+    .small {
+      font-size: 0.92rem;
+      color: #5e5549;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Kestrel Effect Descriptor Programming Guide</h1>
+    <p class="lede">An effect descriptor is the small <code>.eff</code> program that tells Kestrel what an audio effect is: its display name, its front-panel controls, any FPGA resources it needs, and the sequence of DSP instructions that process each sample. You write it as a readable source file; the firmware parser turns compiles the source at boot and uses it to generate the graphical user interface for effects and the machine code for the Kestrel Core.</p>
+
+    <p>The system operates primarily using sixteen <em>channels</em>, written <code>c0</code> through <code>c15</code>, or equivalently <code>c0</code> through <code>cF</code>. The picture to have in mind is that channels are streams of audio data which flow past a sequence of blocks; each block holds an instruction, and reads, modifies, or writes channels to perform the signal processing. Only <code>c0</code> flows from one effect to the next; at the start of execution, <code>c0</code> contains the input sample, and the output should be written to <code>c0</code>, ready for the next effect, or to be sent to the outside world. Channels <code>c1-cF</code> should be used only as memory to use for temporary intermediate values; their contents do not survive through to the next sample. If you need a value to survive from one audio sample to the next, use a resource such as a delay or memory slot, not a spare channel.</p>
+
+    <h2>The Shape of a Descriptor</h2>
+    <p>Every descriptor starts with the exact version marker <code>v1.0</code>, then a set of named sections. The current parser recognizes <code>.INFO</code>, <code>.RESOURCES</code>, <code>.PARAMETERS</code>, <code>.SETTINGS</code>, <code>.DEFS</code>, and <code>.CODE</code>. The metadata sections are dictionary-like: they contain named entries, strings, expressions, nested dictionaries, and lists. The code section is different: it is an assembly-like list of DSP instructions. During loading, the firmware parses the metadata first, builds a scope of parameters, settings, resources, and helper expressions, and then parses the code against that scope.</p>
+
+<pre><code>v1.0
+
+.INFO
+name: "Simple Gain"
+
+.PARAMETERS
+gain: (
+  name: "Gain"
+  default: 1
+  min: 0
+  max: 2
+)
+
+.CODE
+mul c0 [gain] c0
+</code></pre>
+
+    <p>Entry syntax is deliberately plain. A named value can use either <code>:</code> or <code>=</code>, strings are wrapped in double quotes, and nested dictionaries use parentheses. New lines usually separate entries, though commas are also accepted. Names are identifiers: letters and underscores are accepted, and digits are accepted after the first character. In practice, use lowercase names such as <code>gain</code>, <code>delay_time</code>, or <code>tone_cutoff</code>, because those names become the handles you use later in expressions and code.</p>
+
+    <h2>Expressions</h2>
+    <p>Most numeric fields are expressions, not just literals. The expression parser accepts decimal numbers, binary and hexadecimal numeric forms, parentheses, unary minus, references by name, and the operators <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, and <code>^</code>. It also accepts common math functions including <code>abs</code>, <code>sqr</code>, <code>sqrt</code>, <code>exp</code>, <code>ln</code>, <code>log</code>, <code>log10</code>, <code>sin</code>, <code>cos</code>, <code>tan</code>, <code>sinh</code>, <code>cosh</code>, <code>tanh</code>, <code>asin</code>, <code>acos</code>, <code>atan</code>, and <code>erf</code>. A reference can point to a parameter, a setting, a definition, a memory slot, or an LFO, provided that thing has already been added to the effect scope.</p>
+
+    <p>The firmware provides useful constant expressions internally, including <code>pi</code>, <code>e</code>, <code>sample_rate</code>, <code>freq_max</code>, and related values used by the filter coefficient builders. For authoring, the most useful habit is to put repeated formulas in <code>.DEFS</code>. Definitions are parsed after parameters and settings have entered scope, so a definition can be written in terms of controls such as <code>cutoff</code>, <code>gain</code>, or <code>depth</code>, and then reused in resources or code expressions.</p>
+
+<pre><code>.DEFS
+wet: mix
+dry: 1 - mix
+cutoff_octave_up: cutoff * 2
+</code></pre>
+
+    <h2><code>.INFO</code></h2>
+    <p>The <code>.INFO</code> section is mandatory. It must contain <code>name</code>, a string shown as the effect name. It may also contain <code>cname</code>, the ``code name'', which is used internally to refer to the effect (i.e., a preset uses the cname of its effects to find the .eff file on disc at boot). If <code>cname</code> is omitted, the parser derives one from <code>name</code> by lowercasing capital letters and turning spaces into underscores. </p>
+
+    <h2><code>.PARAMETERS</code></h2>
+    <p>Parameters are the continuous controls the player adjusts on the effect page: gain, cutoff, feedback, mix, depth, rate, and so on. Each entry in <code>.PARAMETERS</code> is a nested dictionary. The entry name is the internal handle used in expressions and code, while the required <code>name</code> field is the display label. The current extractor requires <code>name</code>, <code>default</code>, <code>min</code>, and <code>max</code>. The default must be a constant expression; the range endpoints may be expressions, which lets one control bound depend on another if the UI behavior needs it.</p>
+
+    <table>
+      <thead><tr><th>Field</th><th>Use</th></tr></thead>
+      <tbody>
+        <tr><td><code>name</code></td><td>Required display label string.</td></tr>
+        <tr><td><code>default</code></td><td>Required constant expression used as the initial value.</td></tr>
+        <tr><td><code>min</code>, <code>max</code></td><td>Required expressions defining the control range.</td></tr>
+        <tr><td><code>scale</code></td><td>Optional <code>"linear"</code>, <code>"log"</code>, or <code>"logarithmic"</code>.</td></tr>
+        <tr><td><code>units</code></td><td>Optional display units, such as <code>"Hz"</code>, <code>"ms"</code>, or <code>"%"</code>.</td></tr>
+        <tr><td><code>widget</code></td><td>Optional <code>"dial"</code>/<code>"pot"</code>, <code>"slider"</code>/<code>"hslider"</code>, <code>"vslider"</code>, or <code>"vslider_tall"</code>.</td></tr>
+        <tr><td><code>group</code></td><td>Optional constant integer used by the effect view grouping logic.</td></tr>
+        <tr><td><code>max_velocity</code></td><td>Optional positive constant expression limiting how quickly the value may move.</td></tr>
+        <tr><td><code>driver</code></td><td>Optional reference naming a scope entry that can drive the parameter.</td></tr>
+      </tbody>
+    </table>
+
+<pre><code>.PARAMETERS
+cutoff: (
+  name: "Cutoff"
+  default: 1200
+  min: 20
+  max: freq_max
+  scale: "log"
+  units: "Hz"
+)
+
+mix: (
+  name: "Mix"
+  default: 0.5
+  min: 0
+  max: 1
+  widget: "slider"
+)
+</code></pre>
+
+    <h2><code>.SETTINGS</code></h2>
+    <p>Settings are discrete controls rather than smooth parameters. The current extractor requires <code>name</code>, <code>type</code>, <code>default</code>, <code>min</code>, and <code>max</code>. Accepted types are <code>"int"</code>, <code>"bool"</code>, and <code>"enum"</code>; accepted pages are <code>"main"</code> and <code>"settings"</code>. In the current code, integer and boolean settings are the safest choices. The parser accepts an <code>options</code> dictionary for enums, but the extractor marks that area as unfinished, so treat custom enum option lists as a future-facing feature rather than the comfortable path today.</p>
+
+<pre><code>.SETTINGS
+mode: (
+  name: "Mode"
+  type: "int"
+  default: 0
+  min: 0
+  max: 2
+  page: "settings"
+)
+
+bypass_tone: (
+  name: "Bypass Tone"
+  type: "bool"
+  default: 0
+  min: 0
+  max: 1
+)
+</code></pre>
+
+    <h2><code>.RESOURCES</code></h2>
+    <p>Resources are named pieces of FPGA-side or firmware-managed DSP support that an instruction can use later. Each resource is a nested dictionary with a required <code>type</code>. The current resource extractor recognizes <code>"delay"</code>, <code>"mem"</code>, <code>"filter"</code>, <code>"lpf"</code>, <code>"hpf"</code>, <code>"bpf"</code>, <code>"polynomial"</code>, and <code>"lfo"</code>. In <code>.CODE</code>, resources are referenced with a dollar sign, as in <code>$delay_line</code> or <code>$tone_filter</code>.</p>
+
+    <p>A delay resource must specify exactly one delay amount. The comfortable current spellings are <code>delay</code>, <code>delay_seconds</code>, and <code>delay_samples</code>. In the extractor, <code>delay</code> is treated as milliseconds, <code>delay_seconds</code> as seconds, and <code>delay_samples</code> as samples; <code>size</code> may also be supplied as an expression if the buffer size should be made explicit. The code also checks for a <code>delay_ms</code> spelling, but that path is not handled cleanly later in the same extractor, so prefer plain <code>delay</code> for millisecond delay controls.</p>
+
+<pre><code>.RESOURCES
+echo: (
+  type: "delay"
+  delay: time_ms
+  size: 1000
+)
+</code></pre>
+
+    <p>Filter resources can be declared either by supplying coefficients yourself or by asking the descriptor compiler to build common biquad coefficients. A generic <code>filter</code> resource requires a <code>coefs</code> list and may specify <code>feed_forward</code> or <code>feed_back</code>. A low-pass or high-pass resource uses <code>type: "lpf"</code> or <code>type: "hpf"</code> with a required <code>cutoff</code> expression and an optional <code>Q</code>. A band-pass resource uses <code>type: "bpf"</code> with required <code>center</code> and optional <code>Q</code>. The default Q is the familiar Butterworth-ish <code>sqrt(2) / 2</code> value from the firmware constants.</p>
+
+<pre><code>.RESOURCES
+tone: (
+  type: "lpf"
+  cutoff: cutoff
+  Q: resonance
+)
+
+custom_filter: (
+  type: "filter"
+  coefs: { b0, b1, b2, a1, a2 }
+  feed_forward: 3
+  feed_back: 2
+)
+</code></pre>
+
+    <p>Memory resources use <code>type: "mem"</code> and currently have very little author-facing configuration in the active extractor; they create a named scope entry and can be read or written by <code>mem_read</code> and <code>mem_write</code>. Unlike channels, memory slots are persistent across sample runs: a memory slot contains the last value written to it until another instruction writes a new value. LFO resources use <code>type: "lfo"</code>, require <code>frequency</code> or <code>freq</code>, and must be described either by <code>center</code> plus <code>amplitude</code> or by <code>min</code> plus <code>max</code>. Polynomial resources use <code>type: "polynomial"</code> with a <code>coefs</code> list, then the <code>poly</code> instruction evaluates that resource against an input sample.</p>
+
+<pre><code>.RESOURCES
+slow_sweep: (
+  type: "lfo"
+  frequency: rate
+  min: 300
+  max: 3000
+  scale: "log"
+)
+</code></pre>
+
+    <h2><code>.CODE</code></h2>
+    <p>The <code>.CODE</code> section is the sample-processing program. Each nonblank line starts with an instruction name followed by its operands. Channel operands look like <code>c0</code>, <code>c1</code>, and so on, but ordinary mono effects should read from <code>c0</code> and write their final result back to <code>c0</code>. Expression operands are wrapped in square brackets, for example <code>[gain]</code> or <code>[0.5 * feedback]</code>. Resource operands are introduced with <code>$</code>, for example <code>$echo</code>. The parser checks the number and kind of operands against the FPGA instruction descriptor table, then creates the block list used to program the core.</p>
+
+    <table>
+      <thead><tr><th>Instruction</th><th>Operands</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td><code>nop</code></td><td>none</td><td>No operation.</td></tr>
+        <tr><td><code>mov</code></td><td><code>a dest</code></td><td>Copy a channel or expression into a channel.</td></tr>
+        <tr><td><code>add</code></td><td><code>a b dest</code></td><td>Add two values.</td></tr>
+        <tr><td><code>sub</code></td><td><code>a b dest</code></td><td>Subtract <code>b</code> from <code>a</code>.</td></tr>
+        <tr><td><code>mul</code></td><td><code>a b dest</code></td><td>Multiply two values.</td></tr>
+        <tr><td><code>madd</code></td><td><code>a b c dest</code></td><td>Multiply <code>a</code> and <code>b</code>, then add <code>c</code>.</td></tr>
+        <tr><td><code>abs</code>, <code>min</code>, <code>max</code>, <code>clamp</code></td><td>standard value operands</td><td>Common limiting and shaping primitives.</td></tr>
+      </tbody>
+    </table>
+
+    <table>
+      <thead><tr><th>Instruction</th><th>Operands</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td><code>delay_read</code></td><td><code>$delay dest</code></td><td>Read from a delay resource into a channel.</td></tr>
+        <tr><td><code>delay_mread</code></td><td><code>$delay a b dest</code></td><td>Delay read variant with two value operands.</td></tr>
+        <tr><td><code>delay_write</code></td><td><code>value $delay</code></td><td>Write a value into a delay resource.</td></tr>
+        <tr><td><code>mem_read</code>, <code>mem_write</code></td><td><code>$mem dest</code>, <code>value $mem</code></td><td>Read and write memory resources.</td></tr>
+        <tr><td><code>filter</code>, <code>poly</code></td><td><code>input $resource dest</code></td><td>Run a filter or polynomial resource.</td></tr>
+        <tr><td><code>fcasc</code></td><td><code>$filter dest</code></td><td>Filter cascade helper.</td></tr>
+        <tr><td><code>macz</code>, <code>umacz</code>, <code>mac</code>, <code>umac</code></td><td><code>a b</code></td><td>Accumulator multiply-accumulate primitives.</td></tr>
+        <tr><td><code>mov_acc</code>, <code>mov_lacc</code>, <code>mov_uacc</code></td><td><code>dest</code></td><td>Move accumulator state into a channel.</td></tr>
+      </tbody>
+    </table>
+
+    <p>The descriptor compiler also recognizes <code>tanh4</code> and <code>sin2pi</code> as convenient LUT-backed waveshaping/read instructions with the form <code>input dest</code>. Shift instructions <code>arsh</code>, <code>lsh</code>, and <code>rsh</code> take <code>a b shift dest</code>, where <code>shift</code> is an integer operand. The state-variable filter path is a little different from ordinary one-output instructions: <code>svf</code> triggers the filter computation and stores the low-pass, high-pass, and band-pass results internally instead of writing directly to a channel. The follow-up instructions <code>svf_low</code>, <code>svf_high</code>, and <code>svf_band</code> then move whichever stored result you want into a channel. Running <code>svf</code> again overwrites the stored SVF results.</p>
+
+<pre><code>.DEFS
+dry: 1 - mix
+wet: mix
+
+.CODE
+filter c0 $tone c2
+mul c2 [wet] c2
+madd c0 [dry] c2 c0
+</code></pre>
+
+    <p>Think of channels as working registers for the effect program. <code>c0</code> carries the sample you are transforming, and later channels can be used as scratch space when an effect needs intermediate values. Keep the code easy to audit: move or compute an intermediate into a spare channel, name repeated formulas in <code>.DEFS</code>, then combine the final result back into <code>c0</code>. The compiler will compute the register formats needed for expressions and instruction operands, so the descriptor can stay focused on the signal flow.</p>
+
+    <h2>A Complete Small Effect</h2>
+    <p>This example is a simple mono low-pass filter with cutoff and resonance controls. It demonstrates the usual descriptor pattern without any special waveshaper behavior: declare friendly controls, create a generated filter resource, process <code>c0</code> through that resource, and leave coefficient generation and fixed-point scaling to the compiler.</p>
+
+<pre><code>v1.0
+
+.INFO
+name: "Simple Low Pass"
+
+.PARAMETERS
+cutoff: (
+  name: "Cutoff"
+  default: 1200
+  min: 20
+  max: freq_max
+  scale: "log"
+  units: "Hz"
+  widget: "dial"
+)
+
+resonance: (
+  name: "Resonance"
+  default: 0.707
+  min: 0.5
+  max: 4
+  widget: "dial"
+)
+
+.RESOURCES
+filter: (
+  type: "lpf"
+  cutoff: cutoff
+  Q: resonance
+)
+
+.CODE
+filter c0 $filter c0
+</code></pre>
+
+    <h2>Working Method</h2>
+    <p>Build effects in passes. First write <code>.INFO</code> and the parameters, then load the descriptor and confirm that the controls appear with sane ranges. Next add resources and a minimal <code>.CODE</code> path that passes audio or applies one obvious operation. Only then add feedback, filtering, modulation, or waveshaping. Parser errors are usually literal: a missing mandatory attribute, a wrong value type, an unknown resource, an unsupported field name, or an instruction with the wrong number of operands. When in doubt, simplify the descriptor until it loads, then add one idea back at a time.</p>
+
+    <div class="note"><p><strong>Current-code notes.</strong> This guide is based on the parser, extractors, scope code, and FPGA instruction descriptor table in the firmware, not on the older descriptor files that may still be present in the tree. A few recognized features are visibly unfinished or rough in the current code, especially enum option extraction and some memory-resource configuration. The comfortable authoring path today is parameters, definitions, delay resources, generated filters, polynomial resources, SVF where its three-output model is useful, and the ordinary arithmetic/resource instructions.</p></div>
+
+    <h2>Author Checklist</h2>
+    <p>Start the file with <code>v1.0</code>. Include <code>.INFO</code> with a string <code>name</code>. Give every parameter a display name, constant default, and range. Keep internal names simple and stable. Put repeated formulas in <code>.DEFS</code>. Declare resources before using them in <code>.CODE</code>. Wrap runtime expressions in square brackets inside code. Prefix resources with <code>$</code>. Prefer a small working descriptor over a clever first draft, because most effect ideas become easier once the basic signal path is already running.</p>
+
+    <p class="small">Prepared from the current Kestrel firmware parser, resource extractors, expression parser, scope handling, and FPGA instruction descriptor table.</p>
+  </main>
+</body>
+</html>
