@@ -5,10 +5,11 @@ name: "Bass Ring"
 
 .PARAMETERS
 frequency: (name: "Carrier", default: 55, min: 20, max: 220, units: "Hz", scale: "logarithmic")
-mix: (name: "Mix", default: 0.8, min: 0, max: 1)
+mix: (name: "Mix", default: 1, min: 0, max: 1)
 
 .RESOURCES
 phase: (type: "mem")
+wave: (type: "polynomial", coefs: {0, 3.1401887343, 0, -5.1363218456, 0, 2.4271414428, 0, -0.4310083315})
 
 .CODE
 mem_read $phase c1
@@ -20,7 +21,9 @@ mul c3 [128] c3
 mul c3 [256] c3
 sub c2 c3 c4
 mem_write c4 $phase
-sin2pi c4 c5
+mul c4 [2] c5
+poly c5 $wave c5
 mul c0 c5 c6
 mul c0 [1-mix] c7
-madd c6 [mix] c7 c0
+madd c6 [mix] c7 c8
+mul c8 [1/sqrt((1-mix)^2+mix^2/2)] c0

@@ -130,7 +130,7 @@ def check_response(name, record):
     elif name == 'SVFBP':
         assert center > 0.8 and low < 0.2 and high < 0.3, record
     elif name == 'WAH':
-        assert center > 0.8 and low < 0.1 and high < 0.1, record
+        assert center > 2 and low > 0.9 and high > 0.9, record
     elif name == 'SVFNOTCH':
         assert center < 0.2 and low > 0.8 and high > 0.7, record
 

@@ -12,6 +12,7 @@ mix: (name: "Mix", default: 0.5, min: 0, max: 1)
 .RESOURCES
 subphase: (type: "mem")
 phase: (type: "mem")
+wave: (type: "polynomial", coefs: {0, 3.1401887343, 0, -5.1363218456, 0, 2.4271414428, 0, -0.4310083315})
 line: (type: "delay", delay_samples: 4, size: 512)
 
 .CODE
@@ -33,8 +34,8 @@ mul c4 [128] c4
 mul c4 [128] c4
 sub c3 c4 c3
 mem_write c3 $phase
-mul c3 [2] c4
-sin2pi c4 c4
+mul c3 [4] c4
+poly c4 $wave c4
 madd c4 [0.5] [0.5] c4
 delay_mread $line c4 [depth*sample_rate/(1000*512)] c5
 mul c0 [1-feedback] c6

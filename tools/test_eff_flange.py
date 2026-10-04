@@ -31,6 +31,27 @@ def check_comb(source, output):
     return records
 
 
+def check_wave(source, output):
+    # Exercise the shipped polynomial against sine, not just a matching model.
+    resource = next(line for line in source.read_text().splitlines()
+                    if line.startswith('wave:'))
+    effect = output / 'wave.eff'
+    effect.write_text('v1.0\n.INFO\nname: "Flange Wave Test"\n.RESOURCES\n' +
+                      resource + '\n.CODE\npoly c0 $wave c0\n')
+    dry = list(range(-32768, 32768))
+    directory = output / 'wave'
+    record = verify_case(effect, {}, directory, dry)
+    wet = read_pcm(directory / 'rtl.pcm')
+    error = max(abs(y - 32768 * math.sin(math.pi * x / 32768))
+                for x, y in zip(dry, wet))
+    assert error < 64, error
+    assert abs(wet[0]) <= 4 and abs(wet[-1]) <= 8, (wet[0], wet[-1])
+    assert abs(wet[16384] + 32768) < 64 and abs(wet[49152] - 32767) < 64
+    record['max_sine_error_codes'] = error
+    print(f'Wave: all 65536 inputs exact, sine error {error:.3f} codes', flush=True)
+    return record
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, default=Path('/tmp/kestrel-flange-audition'))
@@ -42,7 +63,7 @@ def main():
     # This uses the production compiler; no oscillator opcode or model shortcut.
     oscillator = args.output / 'sweep.eff'
     oscillator.write_text(source.read_text().split('\ndelay_mread')[0] + '\nmov c4 c0\n')
-    records = check_comb(source, args.output)
+    records = [check_wave(source, args.output)] + check_comb(source, args.output)
     for rate in (0.1, 0.3, 3):
         frames = math.ceil(2.6 * RATE / rate)
         directory = args.output / f'sweep-{rate}'

@@ -1,6 +1,6 @@
-The current-image library uses arithmetic, the Chamberlin SVF, built-in LUTs and
+The current-image library uses arithmetic, the Chamberlin SVF, static polynomials,
 scratchpad state and allocated integer delays. It needs the
-paired Q15 firmware/FPGA contract and SVF capability; it does not use the old
+paired Q15 firmware/FPGA contract and polynomial/SVF capabilities; it does not use the old
 general filter engine. All filenames fit the carrier's 8.3 FAT configuration.
 
 | File | Effect | Controls |
@@ -8,7 +8,7 @@ general filter engine. All filenames fit the carrier's 8.3 FAT configuration.
 | FLANGE.EFF | Slow swept comb filtering with delay feedback | Sweep, depth, feedback, mix |
 | BASSRING.EFF | Free-running sine ring modulation in the bass range | Carrier, mix |
 | GROWL.EFF | Cross-modulated bands into an audio-rate cutoff filter | Excitation, audio motion, mix |
-| WAH.EFF | Swept resonant band-pass wah | Sweep, bite |
+| WAH.EFF | Swept resonant peak over dry bass | Sweep, bite |
 | VOWEL.EFF | Two moving formants for a talking filter | Mouth, pronunciation |
 | OCTFUZZ.EFF | Rectified octave fuzz with DC cleanup and low-pass tone | Fuzz, tone, level |
 | DRIVE.EFF | Cubic drive followed by low-pass tone shaping | Drive, tone, level |
@@ -27,9 +27,11 @@ general filter engine. All filenames fit the carrier's 8.3 FAT configuration.
 The tone blend reaches a notch at its middle position because low and high
 outputs cancel around the split frequency. It is not a flat middle-position EQ.
 The wah and vowel filter are manually controlled, without an automatic envelope
-follower or LFO. The vowel's Mouth control moves two band-pass centers from
+follower or LFO. Both retain dry bass and add resonant bands; they do not discard
+the fundamental to produce a guitar-range band-pass output. The vowel's Mouth control moves two band-pass centers from
 350/2200 Hz to 800/1200 Hz; these are approximate vowel-like colors, not a voice
-model. Octave Fuzz emphasizes rectifier harmonics by saturating the driven signal
+model. David finds the level-preserving vowel revision approximately unchanged;
+its audible character still needs refinement. Octave Fuzz emphasizes rectifier harmonics by saturating the driven signal
 before its tone filter; it does not pitch-shift arbitrary chords.
 Cross Growl multiplies a 400-Hz low-pass component by a 1200-Hz band-pass
 component, boosts the product, and filters it with a cutoff driven by the low
@@ -39,11 +41,16 @@ drives the input and Mix retains some dry attack. Its sound is input-dependent;
 numeric verification is separate from listening acceptance.
 
 Bass Ring multiplies the input by a continuous sine carrier, keeping phase in a
-scratchpad word across samples. Carrier selects 20–220 Hz; Mix retains dry attack.
+scratchpad word across samples. Its carrier uses the same degree-seven sine
+polynomial as the flanger, avoiding the installed FPGA's missing sine ROM.
+Carrier selects 20–220 Hz; Mix defaults to full wet and can retain dry attack.
+The mix has RMS compensation, `1/sqrt((1-mix)^2+mix^2/2)`, to compensate the
+sine carrier's inherent energy loss. This is a nominal level correction; strong
+inputs can saturate.
 The Q15 phase increment gives approximately 1.35-Hz frequency steps at 44.1 kHz,
 so the control is nominal, not an exactly tuned or pitch-tracking oscillator.
 At full wet, a single note produces sum/difference sidebands. It is an experiment
-for bass, with listening acceptance pending. Use low fundamentals, harmonics and
+for bass; David confirms an audible effect from the repaired version. Use low fundamentals, harmonics and
 playing transients when auditioning this library.
 
 Bass Flange moves an integer delay tap from four samples up to the selected
@@ -52,10 +59,18 @@ the write input is scaled by `1-feedback` to retain headroom. Output weights
 compensate that scaling: at Mix=0.5, dry/wet weights are `(1-feedback)/2` and
 `(1+feedback)/2`, retaining deep cancelling notches and unity DC gain. Two scratchpad words provide the slow phase accumulator through
 ordinary arithmetic; its frequency is nominal and its sine has 256 phase steps.
+An odd degree-seven polynomial generates the sine: all 65,536 input codes match
+RTL, with maximum analytic error below 24 signed16 codes.
 The delay buffer is 516 words after compiler padding, with a silent first traversal
 and subsequent fade-in. The tap has no fractional interpolation. Listening
-acceptance on bass remains pending. Run `python3 tools/test_eff_flange.py` for
+feedback confirms audible modulation, described as a throbbing droplet; the
+level and musical defaults still need refinement. Run `python3 tools/test_eff_flange.py` for
 complete slow sweeps, synthetic bass transients, dry bypass and silence checks.
+
+Run `python3 tools/test_eff_bass_levels.py` to check default ring sidebands and
+useful RMS levels on synthetic bass through actual compiled RTL. These tests
+keep the first batch's severe wah/vowel attenuation from silently returning.
+The flanger's output level still needs refinement.
 
 From the superproject root, verify the whole batch:
 
@@ -63,7 +78,7 @@ From the superproject root, verify the whole batch:
 python3 tools/effect_library.py --output /tmp/kestrel-effect-library
 ```
 
-This runs the production compiler, a sample model and the actual core/SVF/LUT/delay RTL,
+This runs the production compiler, a sample model and the actual core/SVF/LUT/polynomial/delay RTL,
 compares every output sample exactly, exercises parameter corners, and checks
 default linear-filter responses. Reports include compiled blocks, maximum cycles
 per sample and source/program hashes. Each render produces a WAV with dry input

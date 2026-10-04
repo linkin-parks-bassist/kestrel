@@ -10,4 +10,4 @@ Q: (name: "Bite", default: 2, min: 0.7, max: 3)
 .CODE
 svf c0 [2*sin(pi*cutoff/sample_rate)] [1/Q]
 svf_band c1
-mul c1 [1/Q] c0
+madd c1 [2/Q] c0 c0
