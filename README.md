@@ -156,6 +156,10 @@ listening WAVs and sample-cycle costs. The same tool accepts a mono PCM16,
 44.1-kHz recording. `tools/upload_effects.py` deploys verified descriptors over
 ESP32 USB with exact SD readback. See the library instructions for usage and
 coverage limits; the old general-filter examples need an optional FPGA build.
+`python3 tools/test_eff_delay.py` checks compiled delay taps, startup fade, feedback
+and isolated buffers through the actual delay unit and a delayed RAM responder.
+Negative A is clamped to zero; a remaining negative-B/final-offset buffer-bounds
+defect is explicitly reproduced by that test.
 
 ### Compiler-to-RTL regression
 

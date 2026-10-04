@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Sample model for the library's compiled arithmetic/SVF/LUT/scratchpad subset.
+"""Sample model for the library's compiled arithmetic/SVF/LUT/scratchpad/delay subset.
 
 Consume production programming bytes, not a second .eff parser. Reject resources
 and opcodes whose behavior is not modelled instead of silently approximating them.
@@ -19,9 +19,15 @@ def saturate(value):
     return max(-32768, min(32767, value))
 
 
+class Program(list):
+    def __init__(self, instructions, delays):
+        super().__init__(instructions)
+        self.delays = delays
+
+
 def read_program(path):
     data = Path(path).read_bytes()
-    instructions, registers = {}, {}
+    instructions, registers, delays = {}, {}, []
     pos = 0
     while pos < len(data):
         command = data[pos]
@@ -30,6 +36,18 @@ def read_program(path):
             if pos != len(data):
                 raise ValueError('tail must end the program')
             break
+        if command == 5:
+            if pos + 6 > len(data):
+                raise ValueError('truncated delay allocation')
+            size = int.from_bytes(data[pos:pos+3], 'big')
+            delay = int.from_bytes(data[pos+3:pos+6], 'big')
+            pos += 6
+            if not 0 < size < (1 << 19) or not 0 <= delay < size or len(delays) == 16:
+                raise ValueError('delay allocation outside model profile')
+            if sum(x[0] for x in delays) + size > (1 << 20):
+                raise ValueError('delay allocations exceed memory')
+            delays.append((size, delay))
+            continue
         if command not in (2, 3, 4):
             raise ValueError(f'unsupported programming command {command}')
         width = 4 if command == 2 else 2
@@ -48,25 +66,56 @@ def read_program(path):
         raise ValueError('missing tail')
     if not instructions or sorted(instructions) != list(range(len(instructions))):
         raise ValueError('expected contiguous instruction blocks')
-    program = [(instructions[i], registers.get((i, 0), 0), registers.get((i, 1), 0))
-               for i in range(len(instructions))]
+    program = Program([(instructions[i], registers.get((i, 0), 0), registers.get((i, 1), 0))
+                       for i in range(len(instructions))], delays)
     for i, (word, _, _) in enumerate(program):
         op = word & 31
-        if op not in (1, 5, 6, 7, 8, 16, 19, 20, 23, 24, 25, 26):
+        if op not in (1, 5, 6, 7, 8, 16, 17, 18, 19, 20, 23, 24, 25, 26):
             raise ValueError(f'unsupported opcode {op} at block {i}')
         resource = bool(word & 32)
-        if resource != (op in (16, 19, 20)):
+        if resource != (op in (16, 17, 18, 19, 20)):
             raise ValueError('unsupported instruction format')
         handle = word >> 20
         if resource and (handle > 255 or (op == 16 and handle not in (0, 1))):
             raise ValueError('unsupported resource handle')
+        if op in (17, 18) and handle >= len(delays):
+            raise ValueError('unallocated delay handle')
         dest = (word >> (16 if resource else 21)) & 15
-        if op not in (20, 23) and dest == 0 and i != len(program) - 1:
+        if op not in (18, 20, 23) and dest == 0 and i != len(program) - 1:
             raise ValueError('library renderer requires only the final instruction to write c0')
     word = program[-1][0]
-    if (word & 31) in (20, 23) or ((word >> (16 if word & 32 else 21)) & 15) != 0:
+    if (word & 31) in (18, 20, 23) or ((word >> (16 if word & 32 else 21)) & 15) != 0:
         raise ValueError('final instruction must write c0')
     return program
+
+
+class Delay:
+    def __init__(self, size, delay):
+        self.values = [None] * size
+        self.size, self.delay = size, delay
+        self.position, self.gain, self.wrapped = 0, 0, False
+
+    def read(self, a, b):
+        modulation = signed((max(0, a) * b) >> 15, 16)
+        delta = signed(self.delay + ((modulation * signed(self.size >> 4, 16)) >> 11), 20)
+        delta = max(1 - self.size, min(self.size - 1, delta))
+        # RTL compares signed delta with unsigned position: mirror that wire behavior.
+        index = (self.position - delta + (self.size if (delta & 0xfffff) > self.position else 0)) & 0xfffff
+        if index >= self.size:
+            raise ValueError('delay modulation addressed outside its allocated buffer')
+        value = self.values[index]
+        if self.gain == 0:
+            return 0
+        if value is None:
+            raise ValueError('audible read of unwritten delay memory')
+        return signed((value * self.gain) >> 14, 16)
+
+    def write(self, value):
+        self.values[self.position] = value
+        if self.wrapped and self.gain < 16384:
+            self.gain += 64
+        self.wrapped |= self.position == self.size - 1
+        self.position = (self.position + 1) % self.size
 
 
 class DSP:
@@ -74,6 +123,7 @@ class DSP:
         self.program = program
         self.states = {}
         self.memory = {}
+        self.delays = [Delay(*config) for config in getattr(program, "delays", [])]
         self.luts = []
         if any((word & 31) == 16 for word, _, _ in program):
             root = Path(__file__).resolve().parents[1] / 'kestrel_core' / 'luts'
@@ -112,6 +162,12 @@ class DSP:
 
             op, shift = word & 31, (word >> 25) & 31
             dest = (word >> (16 if word & 32 else 21)) & 15
+            if op == 18:
+                self.delays[word >> 20].write(operand(6))
+                continue
+            if op == 17:
+                channels[dest] = self.delays[word >> 20].read(operand(6), operand(11))
+                continue
             if op == 20:
                 self.memory[word >> 20] = operand(6)
                 continue

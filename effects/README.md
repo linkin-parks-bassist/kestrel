@@ -73,8 +73,13 @@ instruction may write c0. The renderer exercises full reset before programming;
 scratchpad values then persist across samples. LUT modeling uses the actual ROM
 words with bit-exact interpolation. Run `python3 tools/test_eff_state.py` for
 exhaustive LUT input checks and an independent scratchpad recurrence test.
-Other opcodes and resource programming fail explicitly; delay and polynomial
-effects still need model/renderer coverage. The enclosing SPI controller, mixer
+Allocated integer delays also run through the real delay unit using a delayed RAM
+responder: `python3 tools/test_eff_delay.py` checks taps, startup gain, feedback
+and isolated buffers, including negative-A clamping to zero. It separately
+reproduces a remaining negative-B/final-offset bounds bug; avoid modulation that makes the final delay negative. The responder
+does not simulate the SDRAM controller, arbiter or pins.
+Other opcodes and resource programming fail explicitly; polynomial
+and allocated LUT effects still need model/renderer coverage. The enclosing SPI controller, mixer
 and converters are outside this loop. Full one-pipeline system verification remains planned.
 
 To upload verified files, close other UART clients and use the ESP32 USB serial
