@@ -13,6 +13,7 @@ from dsp_model import DSP, read_pcm, read_program, write_pcm
 ROOT = Path(__file__).resolve().parents[1]
 RATE = 44100
 CASES = {
+    'FLANGE': {'rate': (0.1, 3), 'depth': (0.2, 8), 'feedback': (0, 0.85), 'mix': (0, 1)},
     'BASSRING': {'frequency': (20, 220), 'mix': (0, 1)},
     'GROWL': {'drive': (0, 18), 'motion': (0, 1), 'mix': (0, 1)},
     'WAH': {'cutoff': (300, 2500), 'Q': (0.7, 3)},
@@ -99,7 +100,7 @@ def verify_case(effect, params, directory, dry):
         assert list(actual) == [max(-32768, min(32767, polarity * x)) for x in dry]
     if effect.stem == 'CLIP':
         assert max(abs(x) for x in actual) <= math.ceil(32768 * params.get('ceiling', 0.5))
-    if effect.stem in ('GROWL', 'BASSRING') and params.get('mix') == 0:
+    if effect.stem in ('GROWL', 'BASSRING', 'FLANGE') and params.get('mix') == 0:
         assert list(actual) == list(dry)
     wav(directory / 'dry-wet.wav', dry, actual)
     fields = result.stdout.strip().split(',')

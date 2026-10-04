@@ -1,10 +1,11 @@
 The current-image library uses arithmetic, the Chamberlin SVF, built-in LUTs and
-scratchpad state. It needs the
+scratchpad state and allocated integer delays. It needs the
 paired Q15 firmware/FPGA contract and SVF capability; it does not use the old
 general filter engine. All filenames fit the carrier's 8.3 FAT configuration.
 
 | File | Effect | Controls |
 | --- | --- | --- |
+| FLANGE.EFF | Slow swept comb filtering with delay feedback | Sweep, depth, feedback, mix |
 | BASSRING.EFF | Free-running sine ring modulation in the bass range | Carrier, mix |
 | GROWL.EFF | Cross-modulated bands into an audio-rate cutoff filter | Excitation, audio motion, mix |
 | WAH.EFF | Swept resonant band-pass wah | Sweep, bite |
@@ -45,13 +46,24 @@ At full wet, a single note produces sum/difference sidebands. It is an experimen
 for bass, with listening acceptance pending. Use low fundamentals, harmonics and
 playing transients when auditioning this library.
 
+Bass Flange moves an integer delay tap from four samples up to the selected
+0.2–8 ms depth, using a 0.1–3 Hz sine sweep. Feedback strengthens the comb response;
+the write input is scaled by `1-feedback` to retain headroom. Output weights
+compensate that scaling: at Mix=0.5, dry/wet weights are `(1-feedback)/2` and
+`(1+feedback)/2`, retaining deep cancelling notches and unity DC gain. Two scratchpad words provide the slow phase accumulator through
+ordinary arithmetic; its frequency is nominal and its sine has 256 phase steps.
+The delay buffer is 516 words after compiler padding, with a silent first traversal
+and subsequent fade-in. The tap has no fractional interpolation. Listening
+acceptance on bass remains pending. Run `python3 tools/test_eff_flange.py` for
+complete slow sweeps, synthetic bass transients, dry bypass and silence checks.
+
 From the superproject root, verify the whole batch:
 
 ```bash
 python3 tools/effect_library.py --output /tmp/kestrel-effect-library
 ```
 
-This runs the production compiler, a sample model and the actual core/SVF/LUT RTL,
+This runs the production compiler, a sample model and the actual core/SVF/LUT/delay RTL,
 compares every output sample exactly, exercises parameter corners, and checks
 default linear-filter responses. Reports include compiled blocks, maximum cycles
 per sample and source/program hashes. Each render produces a WAV with dry input

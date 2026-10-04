@@ -1,9 +1,9 @@
 ---
 status: green
-revised_at: "2026-10-04T12:31:19+11:00"
+revised_at: "2026-10-04T12:40:35+11:00"
 ---
 
-Kestrel is a programmable digital effects pedal combining an ESP32-P4 control/UI processor, Gowin FPGA audio DSP core, and KiCad PCB. This superproject owns cross-component contracts, hardware overview, and example .eff effects. Its submodules are kestrel_interface, kestrel_core and kestrel_pcb; the first two own separate local trees. The authored docs/eff_guide.html explains effect descriptors. effects/ includes the current seventeen-effect arithmetic/SVF/built-in-LUT/scratchpad library and older examples; tools/effect_library.py supplies compiled sample-model/actual-core comparisons, listening WAVs and cycle costs, and tools/upload_effects.py deploys verified descriptors over USB. how/to/verify/an/effect/descriptor.md owns the workflow and exclusions. The current carrier SD contains only that verified batch, with exact byte readback checked; its example-effects owner records ordinary UI discovery evidence.
+Kestrel is a programmable digital effects pedal combining an ESP32-P4 control/UI processor, Gowin FPGA audio DSP core, and KiCad PCB. This superproject owns cross-component contracts, hardware overview, and example .eff effects. Its submodules are kestrel_interface, kestrel_core and kestrel_pcb; the first two own separate local trees. The authored docs/eff_guide.html explains effect descriptors. effects/ includes the current eighteen-effect arithmetic/SVF/built-in-LUT/scratchpad/delay library and older examples; tools/effect_library.py supplies compiled sample-model/actual-core comparisons, listening WAVs and cycle costs, and tools/upload_effects.py deploys verified descriptors over USB. how/to/verify/an/effect/descriptor.md owns the workflow and exclusions. The current carrier SD contains only that verified batch, with exact byte readback checked; its example-effects owner records ordinary UI discovery evidence.
 
 Kestrel is David's deeply personal project. how/to/work/on/kestrel.md governs all work: utmost care, preservation of its distilled architecture/conventions, minimal code relative to function, and uncompromised capability/performance with style on constrained hardware.
 

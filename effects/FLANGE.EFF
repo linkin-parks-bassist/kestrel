@@ -1,0 +1,44 @@
+v1.0
+
+.INFO
+name: "Bass Flange"
+
+.PARAMETERS
+rate: (name: "Sweep", default: 0.3, min: 0.1, max: 3, units: "Hz", scale: "logarithmic")
+depth: (name: "Depth", default: 5, min: 0.2, max: 8, units: "ms")
+feedback: (name: "Feedback", default: 0.65, min: 0, max: 0.85)
+mix: (name: "Mix", default: 0.5, min: 0, max: 1)
+
+.RESOURCES
+subphase: (type: "mem")
+phase: (type: "mem")
+line: (type: "delay", delay_samples: 4, size: 512)
+
+.CODE
+mem_read $subphase c1
+add c1 [rate*128/sample_rate] c1
+max c1 [0.25] c2
+sub c2 [0.25] c2
+min c2 [1/32768] c2
+mul c2 [128] c2
+mul c2 [128] c2
+sub c1 c2 c1
+mem_write c1 $subphase
+mem_read $phase c3
+madd c2 [1/256] c3 c3
+max c3 [0.25] c4
+sub c4 [0.25] c4
+min c4 [1/32768] c4
+mul c4 [128] c4
+mul c4 [128] c4
+sub c3 c4 c3
+mem_write c3 $phase
+mul c3 [2] c4
+sin2pi c4 c4
+madd c4 [0.5] [0.5] c4
+delay_mread $line c4 [depth*sample_rate/(1000*512)] c5
+mul c0 [1-feedback] c6
+madd c5 [feedback] c6 c6
+delay_write c6 $line
+mul c0 [(1-mix)*(1-feedback)/((1-mix)*(1-feedback)+mix*(1+feedback))] c7
+madd c5 [mix*(1+feedback)/((1-mix)*(1-feedback)+mix*(1+feedback))] c7 c0
