@@ -31,7 +31,8 @@ follower or LFO. Both retain dry bass and add resonant bands; they do not discar
 the fundamental to produce a guitar-range band-pass output. The vowel's Mouth control moves two band-pass centers from
 100/1400 Hz to 500/400 Hz; these are approximate vowel-like colors, not a voice
 model. David found the earlier higher-frequency version approximately unchanged;
-these lower centers target bass harmonics, with listening acceptance still open. Octave Fuzz emphasizes rectifier harmonics by saturating the driven signal
+these lower centers target bass harmonics, but David still finds the result ultra
+mild. At a fixed Mouth setting this is resonant EQ, not a demonstrated vocal effect. Octave Fuzz emphasizes rectifier harmonics by saturating the driven signal
 before its tone filter; it does not pitch-shift arbitrary chords.
 Cross Growl multiplies a 400-Hz low-pass component by a 1200-Hz band-pass
 component, boosts the product, and filters it with a cutoff driven by the low
@@ -56,24 +57,25 @@ playing transients when auditioning this library.
 Bass Flange moves an integer delay tap from four samples up to the selected
 0.2–8 ms depth, using a 0.1–3 Hz sine sweep. Feedback strengthens the comb response;
 the write input is scaled by `1-feedback` to retain headroom. Output weights
-preserve the cancelling dry/wet ratio and compensate nominal energy loss. With
-`m=Mix`, `f=Feedback`, and `D=sqrt((1-m)^2*(1-f)^2+m^2*(1-f^2))`, weights are
-`(1-m)*(1-f)/D` and `m*(1+f)/D`. This estimates decorrelated signal energy;
-comb peaks and notches still change the level of individual notes. Two scratchpad words provide the slow phase accumulator through
+retain deep cancelling notches and unity DC gain. At Mix=0.5, dry/wet weights
+are `(1-feedback)/2` and `(1+feedback)/2`. David prefers this quieter watery
+mix to the energy-normalized alternative, so its original weights are retained. Two scratchpad words provide the slow phase accumulator through
 ordinary arithmetic; its frequency is nominal and its sine has 256 phase steps.
 An odd degree-seven polynomial generates the sine: all 65,536 input codes match
 RTL, with maximum analytic error below 24 signed16 codes.
 The delay buffer is 516 words after compiler padding, with a silent first traversal
 and subsequent fade-in. The tap has no fractional interpolation. Listening
 feedback confirms audible modulation, described as a throbbing droplet; the
-compensated level and musical defaults still need listening acceptance. Run `python3 tools/test_eff_flange.py` for
+original quieter mix is preferred by David. Run `python3 tools/test_eff_flange.py` for
 complete slow sweeps, synthetic bass transients, dry bypass and silence checks.
 
 Run `python3 tools/test_eff_bass_levels.py` to check default ring sidebands, vowel character/control contrast and
 useful RMS levels for ring/wah/vowel/flanger through actual compiled RTL. These tests
 keep the first batch's severe wah/vowel attenuation from silently returning.
-Current synthetic default RMS gains are +0.03/+0.11/+1.35/−0.69 dB respectively;
-these are bounded checks, not a guarantee for every bass signal.
+Ring/wah/vowel synthetic default RMS gains are +0.03/+0.11/+1.35 dB;
+these are bounded checks, not a guarantee for every bass signal. The restored
+flanger records its gain without enforcing that loudness target, reflecting
+David's explicit sonic preference.
 
 From the superproject root, verify the whole batch:
 

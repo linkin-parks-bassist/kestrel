@@ -30,7 +30,10 @@ def main():
         wet = read_pcm(directory / 'rtl.pcm')
         gain = 10 * math.log10(sum(x*x for x in wet[RATE:]) /
                               sum(x*x for x in dry[RATE:]))
-        assert -3 < gain < 3, (name, gain)
+        # David prefers the quieter, DC-normalized watery flanger. Record its
+        # level without making loudness compensation an acceptance requirement.
+        if name != 'FLANGE':
+            assert -3 < gain < 3, (name, gain)
         assert max(map(abs, wet)) < 32000, name
         record['bass_rms_gain_db'] = gain
         if name == 'VOWEL':

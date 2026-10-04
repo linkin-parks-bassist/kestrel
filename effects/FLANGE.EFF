@@ -41,5 +41,5 @@ delay_mread $line c4 [depth*sample_rate/(1000*512)] c5
 mul c0 [1-feedback] c6
 madd c5 [feedback] c6 c6
 delay_write c6 $line
-mul c0 [(1-mix)*(1-feedback)/sqrt((1-mix)^2*(1-feedback)^2+mix^2*(1-feedback^2))] c7
-madd c5 [mix*(1+feedback)/sqrt((1-mix)^2*(1-feedback)^2+mix^2*(1-feedback^2))] c7 c0
+mul c0 [(1-mix)*(1-feedback)/((1-mix)*(1-feedback)+mix*(1+feedback))] c7
+madd c5 [mix*(1+feedback)/((1-mix)*(1-feedback)+mix*(1+feedback))] c7 c0
