@@ -1,0 +1,19 @@
+v1.0
+
+.INFO
+name: "Octave Fuzz"
+
+.PARAMETERS
+drive: (name: "Fuzz", default: 12, min: 0, max: 24, units: "dB")
+tone: (name: "Tone", default: 1800, min: 500, max: 3500, units: "Hz", scale: "logarithmic")
+level: (name: "Level", default: -6, min: -24, max: 0, units: "dB")
+
+.CODE
+mul c0 [0.5] c1
+abs c1 c1
+svf c1 [2*sin(pi*30/sample_rate)] [sqrt(2)]
+svf_high c2
+mul c2 [2*10^(drive/20)] c3
+svf c3 [2*sin(pi*tone/sample_rate)] [sqrt(2)]
+svf_low c4
+mul c4 [10^(level/20)] c0

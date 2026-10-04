@@ -1,0 +1,13 @@
+v1.0
+
+.INFO
+name: "SVF Low Pass 4"
+
+.PARAMETERS
+cutoff: (name: "Cutoff", default: 1500, min: 50, max: 3500, units: "Hz", scale: "logarithmic")
+
+.CODE
+svf c0 [2*sin(pi*cutoff/sample_rate)] [sqrt(2)]
+svf_low c1
+svf c1 [2*sin(pi*cutoff/sample_rate)] [sqrt(2)]
+svf_low c0

@@ -1,9 +1,10 @@
 ---
-status: "unverified"
-created_at: "2026-09-20T00:12:06+10:00"
-scope: "local"
-source: "caller-supplied answer; evidence not recorded"
+status: green
+revised_at: "2026-10-04T10:47:44+11:00"
 ---
-Status: Green
 
-Source comparison on 2026-09-20: kestrel_interface/components/fpga/kest_fpga_cmd.h and kestrel_core/include/controller.vh define the same named command IDs with equal numeric values (1–5, 10–20, 35–39). kestrel_interface/components/fpga/kest_fpga_dma.h and core/include/controller.vh define the same named DATA_REQ IDs with equal values (1–15, 33). kestrel_interface/components/core/kest_block.h and core/include/instr_dec.vh define matching BLOCK_INSTR opcode numbers 0–27. These duplicated constants are a cross-repository contract; changes require synchronized edits or generated shared definitions. Numeric agreement is a source check, not a proof of framing, timing, or live hardware interoperability.
+Interface kest_fpga_cmd.h and Core controller.vh define equal named command IDs (1–5, 10–20, 35–40). Interface kest_fpga_defs.h and Core controller.vh define equal DATA_REQ IDs (1–15, 33). Interface kest_block.h and Core instr_dec.vh define matching BLOCK_INSTR numbers 0–27. These duplicated constants require synchronized changes or generated shared definitions. Agreement is a source check, not proof of framing, timing or hardware interoperability.
+
+Command 40 is read32: three address bytes MSB first and a four-byte result through the existing data-ready/READOUT mechanism. Word-aligned address 0 returns magic 0x4b455354 (KEST), and address 4 returns bits 0/1/2 for ENABLE_FILTER/POLYNOMIAL/SVF. The default Core mask is 6. Core build.vh computes bits from the actual build macros; Interface kest_fpga_cmd.h carries matching constants. The controller dispatches the address outside itself to build_registers in engine.v. The Interface supplies kest_fpga_read32 and queues it through the existing asynchronous read callback; fpga-read32 exposes it over UART. Unmapped addresses have no responder. read24/read16/read8, automatic boot capability discovery and instruction rejection/lowering remain future work. The matching pair is installed and /tmp/kestrel-timing-read32-hil.log verifies these exact address 0/4 responses through UART commands and physical SPI. This qualifies those two addressed reads, not all framing, address handling or clock-domain cases.
+
+Argument encoding is also a paired compiler/RTL contract. The Interface descriptor/resolver owner governs joint format selection and persisted register conversion; the Core filter-engine owner governs SVF normalization. SVF cutoff now uses nonnegative signed Q15 and damping an independently compensated signed format, with the former extra coefficient left shifts removed. Deploy the matching compiler/firmware and FPGA implementation together; an old FPGA does not interpret the new coefficient words with that scale. Focused compiled readback and SVF simulations verify their tested paths, while controller/mixer/SPI and physical qualification remain separate.

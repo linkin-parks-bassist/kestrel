@@ -276,6 +276,9 @@ madd c0 [dry] c2 c0
 
     <p>Think of channels as working registers for the effect program. <code>c0</code> carries the sample you are transforming, and later channels can be used as scratch space when an effect needs intermediate values. Keep the code easy to audit: move or compute an intermediate into a spare channel, name repeated formulas in <code>.DEFS</code>, then combine the final result back into <code>c0</code>. The compiler will compute the register formats needed for expressions and instruction operands, so the descriptor can stay focused on the signal flow.</p>
 
+    <p>Each instruction has two expression registers, so at most two value operands can be bracketed expressions. Compute a third expression into a channel first. The compiler chooses expression formats jointly under the instruction descriptor's permitted formats and shared field rules; channels already contain DSP words. Shift fields accept integers from 0 through 15.</p>
+    <p><code>svf audio cutoff damping</code> uses a nonnegative signed-Q15 cutoff coefficient: <code>[0.25]</code> sends 8192 regardless of the expression's declared maximum. Negative cutoff expressions are bounded to zero, and values above <code>1 - 2^-15</code> saturate to that endpoint. A cutoff channel supplies the same Q15 scale; negative channel words also become zero in the SVF. Damping receives its own signed format, with the instruction field providing its scale compensation. Read the desired output immediately after the corresponding <code>svf</code> update.</p>
+
     <h2>A Complete Small Effect</h2>
     <p>This example is a simple mono low-pass filter with cutoff and resonance controls. It demonstrates the usual descriptor pattern without any special waveshaper behavior: declare friendly controls, create a generated filter resource, process <code>c0</code> through that resource, and leave coefficient generation and fixed-point scaling to the compiler.</p>
 

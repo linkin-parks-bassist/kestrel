@@ -1,0 +1,24 @@
+v1.0
+
+.INFO
+name: "Cross Growl"
+
+.PARAMETERS
+drive: (name: "Excitation", default: 12, min: 0, max: 18, units: "dB")
+motion: (name: "Audio Motion", default: 1, min: 0, max: 1)
+mix: (name: "Mix", default: 0.8, min: 0, max: 1)
+
+.CODE
+mul c0 [10^(drive/20)] c1
+svf c1 [2*sin(pi*400/sample_rate)] [sqrt(2)]
+svf_low c2
+svf c1 [2*sin(pi*1200/sample_rate)] [sqrt(2)]
+svf_band c3
+mul c2 c3 c4
+mul c4 [8] c4
+madd c2 [0.35*motion] [2*sin(pi*900/sample_rate)] c5
+clamp c5 [2*sin(pi*100/sample_rate)] [2*sin(pi*3000/sample_rate)] c5
+svf c4 c5 [sqrt(2)]
+svf_low c6
+mul c0 [1-mix] c7
+madd c6 [3*mix] c7 c0

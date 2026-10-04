@@ -1,0 +1,19 @@
+v1.0
+
+.INFO
+name: "Warm Drive"
+
+.PARAMETERS
+drive: (name: "Drive", default: 9, min: 0, max: 18, units: "dB")
+tone: (name: "Tone", default: 2200, min: 500, max: 3500, units: "Hz", scale: "logarithmic")
+level: (name: "Level", default: -3, min: -24, max: 0, units: "dB")
+
+.CODE
+mul c0 [10^(drive/20)] c1
+mul c1 c1 c2
+mul c2 c1 c2
+mul c2 [-0.5] c2
+madd c1 [1.5] c2 c3
+svf c3 [2*sin(pi*tone/sample_rate)] [sqrt(2)]
+svf_low c4
+mul c4 [10^(level/20)] c0

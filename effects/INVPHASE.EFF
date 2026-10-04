@@ -1,0 +1,10 @@
+v1.0
+
+.INFO
+name: "Phase Invert"
+
+.PARAMETERS
+level: (name: "Level", default: 0, min: -24, max: 0, units: "dB")
+
+.CODE
+mul c0 [-10^(level/20)] c0

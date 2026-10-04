@@ -145,13 +145,34 @@ It uses **FreeRTOS** and **LVGL** to provide the touchscreen UI used to create, 
 
 # Getting Started
 
+### Effect library and audio verification
+
+[The current-image effect library](effects/README.md) includes level/polarity,
+hard and cubic drive, octave rectification and SVF low/high/band/notch/cascaded
+filters. Run `python3 tools/effect_library.py` to compare compiled effects against
+the sample model and actual core/SVF RTL, with control corners, response checks,
+listening WAVs and sample-cycle costs. The same tool accepts a mono PCM16,
+44.1-kHz recording. `tools/upload_effects.py` deploys verified descriptors over
+ESP32 USB with exact SD readback. See the library instructions for usage and
+coverage limits; the old general-filter examples need an optional FPGA build.
+
+### Compiler-to-RTL regression
+
+Run `./tools/test_eff_readback.sh` with Verilator and the host C/C++ toolchain
+installed. It builds the Interface host compiler, compiles the readback `.eff`
+fixture and checks its execution and signed scratchpad readback in the DSP core.
+This focused test excludes SPI transport, mixing, delay/filter/LUT engines and
+physical audio; it is one step toward full one-pipeline effect verification.
+
 ### ESP32 build
 
-The display subsystem uses the Waveshare board support package for **ESP32-P4-Nano / Pico**.
+The current carrier firmware uses the Waveshare board support package for **ESP32-P4-Nano / Pico** and builds with **ESP-IDF v5.3.3**. SDK installation and pinned component details are in [the Interface build instructions](kestrel_interface/README.md#esp32).
 
 Build:
 
 ```bash
+source /path/to/esp-idf-v5.3.3/export.sh
+cd kestrel_interface
 idf.py build
 ```
 

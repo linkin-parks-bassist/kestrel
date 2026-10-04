@@ -1,0 +1,15 @@
+v1.0
+
+.INFO
+name: "SVF Tone Blend"
+
+.PARAMETERS
+cutoff: (name: "Split", default: 1000, min: 100, max: 3500, units: "Hz", scale: "logarithmic")
+balance: (name: "Brightness", default: 0.5, min: 0, max: 1)
+
+.CODE
+svf c0 [2*sin(pi*cutoff/sample_rate)] [sqrt(2)]
+svf_low c1
+svf_high c2
+mul c1 [1-balance] c3
+madd c2 [balance] c3 c0

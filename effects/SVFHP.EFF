@@ -1,0 +1,12 @@
+v1.0
+
+.INFO
+name: "SVF High Pass"
+
+.PARAMETERS
+cutoff: (name: "Cutoff", default: 1000, min: 30, max: 5000, units: "Hz", scale: "logarithmic")
+Q: (name: "Resonance", default: 1/sqrt(2), min: 0.5, max: 2)
+
+.CODE
+svf c0 [2*sin(pi*cutoff/sample_rate)] [1/Q]
+svf_high c0

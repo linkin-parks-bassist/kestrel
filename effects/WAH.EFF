@@ -1,0 +1,13 @@
+v1.0
+
+.INFO
+name: "Resonant Wah"
+
+.PARAMETERS
+cutoff: (name: "Sweep", default: 900, min: 300, max: 2500, units: "Hz", scale: "logarithmic")
+Q: (name: "Bite", default: 2, min: 0.7, max: 3)
+
+.CODE
+svf c0 [2*sin(pi*cutoff/sample_rate)] [1/Q]
+svf_band c1
+mul c1 [1/Q] c0

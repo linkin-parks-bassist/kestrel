@@ -1,0 +1,14 @@
+v1.0
+
+.INFO
+name: "SVF Notch"
+
+.PARAMETERS
+cutoff: (name: "Center", default: 1000, min: 30, max: 5000, units: "Hz", scale: "logarithmic")
+Q: (name: "Width", default: 1, min: 0.5, max: 2)
+
+.CODE
+svf c0 [2*sin(pi*cutoff/sample_rate)] [1/Q]
+svf_low c1
+svf_high c2
+add c1 c2 c0
