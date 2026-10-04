@@ -16,7 +16,7 @@ def main():
     args.output.mkdir(parents=True, exist_ok=True)
     prepare()
     records = []
-    for name in ('BASSRING', 'WAH', 'VOWEL'):
+    for name in ('BASSRING', 'WAH', 'VOWEL', 'FLANGE'):
         if name == 'BASSRING':
             dry = [round(8000 * math.sin(2 * math.pi * 73 * n / RATE))
                    for n in range(2 * RATE)]
@@ -33,6 +33,21 @@ def main():
         assert -3 < gain < 3, (name, gain)
         assert max(map(abs, wet)) < 32000, name
         record['bass_rms_gain_db'] = gain
+        if name == 'VOWEL':
+            energy = sum(x*x for x in dry[RATE:])
+            change = math.sqrt(sum((a-b)**2 for a, b in zip(wet[RATE:], dry[RATE:])) / energy)
+            assert change > 0.35, change
+            record['relative_rms_change'] = change
+            mouths = []
+            for mouth in (0, 1):
+                sweep_directory = args.output / f'VOWEL-{mouth}'
+                sweep_record = verify_case(ROOT / 'effects/VOWEL.EFF', {'mouth': mouth},
+                                           sweep_directory, dry)
+                mouths.append(read_pcm(sweep_directory / 'rtl.pcm'))
+                records.append(sweep_record)
+            motion = math.sqrt(sum((a-b)**2 for a, b in zip(mouths[0][RATE:], mouths[1][RATE:])) / energy)
+            assert motion > 0.5, motion
+            record['mouth_relative_rms_change'] = motion
         if name == 'BASSRING':
             carrier = round(55 * 32768 / RATE) * RATE / 32768
             sidebands = []

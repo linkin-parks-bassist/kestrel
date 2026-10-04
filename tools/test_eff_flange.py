@@ -21,13 +21,16 @@ def check_comb(source, output):
         directory = output / f'comb-{feedback}'
         record = verify_case(fixed, {'feedback': feedback, 'mix': 0.5}, directory, dry)
         wet = read_pcm(directory / 'rtl.pcm')
-        assert max(abs(x - 4096) for x in wet[6144:8192]) < 8
+        gain = 1 / math.sqrt(((1-feedback)**2 + 1-feedback**2) / 4)
+        # Descriptor-selected immediate precision introduces coefficient rounding.
+        assert max(abs(x - 4096 * gain) for x in wet[6144:8192]) < 0.01 * 4096 * gain
         residual = max(abs(x) for x in wet[-4096:])
-        # Require at least 40 dB rejection of the 8192-code anti-phase input.
-        assert residual < 8192 / 100, (feedback, residual)
+        # Rejection is relative to the compensated passband, not input level.
+        assert residual < 8192 * gain / 100, (feedback, residual)
+        record['dc_gain'] = gain
         record['notch_peak_codes'] = residual
         records.append(record)
-        print(f'Comb feedback {feedback}: unity DC, notch peak {residual} codes', flush=True)
+        print(f'Comb feedback {feedback}: DC gain {gain:.3f}, notch peak {residual} codes', flush=True)
     return records
 
 
