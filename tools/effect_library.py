@@ -13,6 +13,7 @@ from dsp_model import DSP, read_pcm, read_program, write_pcm
 ROOT = Path(__file__).resolve().parents[1]
 RATE = 44100
 CASES = {
+    'BASSRING': {'frequency': (20, 220), 'mix': (0, 1)},
     'GROWL': {'drive': (0, 18), 'motion': (0, 1), 'mix': (0, 1)},
     'WAH': {'cutoff': (300, 2500), 'Q': (0.7, 3)},
     'VOWEL': {'mouth': (0, 1), 'Q': (1, 3)},
@@ -74,6 +75,7 @@ def tone_gain(values, frequency):
 
 
 def verify_case(effect, params, directory, dry):
+    effect, directory = effect.resolve(), directory.resolve()
     directory.mkdir(parents=True, exist_ok=True)
     program, raw_input = directory / 'program.bin', directory / 'dry.pcm'
     command([ROOT / 'kestrel_interface/bin/lib/compile_eff', effect, program,
@@ -84,7 +86,8 @@ def verify_case(effect, params, directory, dry):
     write_pcm(raw_input, dry)
     output = directory / 'rtl.pcm'
     result = command([ROOT / 'kestrel_core/verilator/test/dsp_core/obj_dir/Vcore_test',
-                      '--render-program', program, raw_input, output], capture_output=True, text=True)
+                      '--render-program', program, raw_input, output], capture_output=True, text=True,
+                     cwd=ROOT / 'kestrel_core')
     actual = read_pcm(output)
     if len(actual) != len(expected):
         raise AssertionError(f'{effect.name}: wrong output length')
@@ -96,7 +99,7 @@ def verify_case(effect, params, directory, dry):
         assert list(actual) == [max(-32768, min(32767, polarity * x)) for x in dry]
     if effect.stem == 'CLIP':
         assert max(abs(x) for x in actual) <= math.ceil(32768 * params.get('ceiling', 0.5))
-    if effect.stem == 'GROWL' and params.get('mix') == 0:
+    if effect.stem in ('GROWL', 'BASSRING') and params.get('mix') == 0:
         assert list(actual) == list(dry)
     wav(directory / 'dry-wet.wav', dry, actual)
     fields = result.stdout.strip().split(',')

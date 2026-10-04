@@ -149,8 +149,9 @@ It uses **FreeRTOS** and **LVGL** to provide the touchscreen UI used to create, 
 
 [The current-image effect library](effects/README.md) includes level/polarity,
 hard and cubic drive, octave rectification and SVF low/high/band/notch/cascaded
-filters. Run `python3 tools/effect_library.py` to compare compiled effects against
-the sample model and actual core/SVF RTL, with control corners, response checks,
+filters, audio-rate cross-modulation and a bass-range sine ring modulator.
+Run `python3 tools/effect_library.py` to compare compiled effects against
+the sample model and actual core/SVF/LUT RTL, with control corners, response checks,
 listening WAVs and sample-cycle costs. The same tool accepts a mono PCM16,
 44.1-kHz recording. `tools/upload_effects.py` deploys verified descriptors over
 ESP32 USB with exact SD readback. See the library instructions for usage and

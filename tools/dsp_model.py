@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Sample model for the library's compiled MADD/MISC/SVF instruction subset.
+"""Sample model for the library's compiled arithmetic/SVF/LUT/scratchpad subset.
 
 Consume production programming bytes, not a second .eff parser. Reject resources
 and opcodes whose behavior is not modelled instead of silently approximating them.
@@ -52,13 +52,19 @@ def read_program(path):
                for i in range(len(instructions))]
     for i, (word, _, _) in enumerate(program):
         op = word & 31
-        if op not in (1, 5, 6, 7, 8, 23, 24, 25, 26):
+        if op not in (1, 5, 6, 7, 8, 16, 19, 20, 23, 24, 25, 26):
             raise ValueError(f'unsupported opcode {op} at block {i}')
-        if word & 32:
-            raise ValueError('resource instruction format is not supported')
-        if op != 23 and ((word >> 21) & 15) == 0 and i != len(program) - 1:
+        resource = bool(word & 32)
+        if resource != (op in (16, 19, 20)):
+            raise ValueError('unsupported instruction format')
+        handle = word >> 20
+        if resource and (handle > 255 or (op == 16 and handle not in (0, 1))):
+            raise ValueError('unsupported resource handle')
+        dest = (word >> (16 if resource else 21)) & 15
+        if op not in (20, 23) and dest == 0 and i != len(program) - 1:
             raise ValueError('library renderer requires only the final instruction to write c0')
-    if (program[-1][0] & 31) == 23 or ((program[-1][0] >> 21) & 15) != 0:
+    word = program[-1][0]
+    if (word & 31) in (20, 23) or ((word >> (16 if word & 32 else 21)) & 15) != 0:
         raise ValueError('final instruction must write c0')
     return program
 
@@ -67,6 +73,30 @@ class DSP:
     def __init__(self, program):
         self.program = program
         self.states = {}
+        self.memory = {}
+        self.luts = []
+        if any((word & 31) == 16 for word, _, _ in program):
+            root = Path(__file__).resolve().parents[1] / 'kestrel_core' / 'luts'
+            self.luts = [[signed(int(word, 16), 16) for word in (root / name).read_text().split()]
+                         for name in ('sin_q15_full.hex', 'tanh_q15.hex')]
+            if any(len(table) != 2048 for table in self.luts):
+                raise ValueError('expected 2048-word built-in LUTs')
+
+    def lookup(self, handle, value):
+        # Use the actual ROM words and the RTL's per-bit rounded interpolation.
+        word = value & 65535
+        index = (word & 32767) >> 4 if handle == 0 else ((word + 32768) & 65535) >> 5
+        fraction = word & 15 if handle == 0 else (word >> 1) & 15
+        following = (index + 1) % 2048 if handle == 0 else min(index + 1, 2047)
+        table = self.luts[handle]
+        difference = signed(table[following] - table[index], 16)
+        result = table[index] + ((difference >> 1) if fraction & 8 else 0)
+        term = (-1 if difference < 0 else 1) * (abs(difference) >> 2)
+        for bit in (2, 1, 0):
+            if fraction & (1 << bit):
+                result += term
+            term = (-1 if term < 0 else 1) * (abs(term) >> 1)
+        return signed(result, 16)
 
     def sample(self, audio):
         channels = {0: audio}
@@ -80,7 +110,17 @@ class DSP:
                     raise ValueError(f'uninitialized channel c{source:x} at block {block}')
                 return channels[source]
 
-            op, shift, dest = word & 31, (word >> 25) & 31, (word >> 21) & 15
+            op, shift = word & 31, (word >> 25) & 31
+            dest = (word >> (16 if word & 32 else 21)) & 15
+            if op == 20:
+                self.memory[word >> 20] = operand(6)
+                continue
+            if op == 19:
+                channels[dest] = self.memory.get(word >> 20, 0)
+                continue
+            if op == 16:
+                channels[dest] = self.lookup(word >> 20, operand(6))
+                continue
             if op == 23:
                 a, f, damping = operand(6), max(0, operand(11)), operand(16)
                 if shift > 15:

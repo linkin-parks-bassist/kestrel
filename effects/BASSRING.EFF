@@ -1,0 +1,26 @@
+v1.0
+
+.INFO
+name: "Bass Ring"
+
+.PARAMETERS
+frequency: (name: "Carrier", default: 55, min: 20, max: 220, units: "Hz", scale: "logarithmic")
+mix: (name: "Mix", default: 0.8, min: 0, max: 1)
+
+.RESOURCES
+phase: (type: "mem")
+
+.CODE
+mem_read $phase c1
+add c1 [frequency/sample_rate] c2
+max c2 [0.5] c3
+sub c3 [0.5] c3
+min c3 [1/32768] c3
+mul c3 [128] c3
+mul c3 [256] c3
+sub c2 c3 c4
+mem_write c4 $phase
+sin2pi c4 c5
+mul c0 c5 c6
+mul c0 [1-mix] c7
+madd c6 [mix] c7 c0

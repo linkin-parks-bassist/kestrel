@@ -1,9 +1,11 @@
-The current-image library uses arithmetic and the Chamberlin SVF. It needs the
+The current-image library uses arithmetic, the Chamberlin SVF, built-in LUTs and
+scratchpad state. It needs the
 paired Q15 firmware/FPGA contract and SVF capability; it does not use the old
 general filter engine. All filenames fit the carrier's 8.3 FAT configuration.
 
 | File | Effect | Controls |
 | --- | --- | --- |
+| BASSRING.EFF | Free-running sine ring modulation in the bass range | Carrier, mix |
 | GROWL.EFF | Cross-modulated bands into an audio-rate cutoff filter | Excitation, audio motion, mix |
 | WAH.EFF | Swept resonant band-pass wah | Sweep, bite |
 | VOWEL.EFF | Two moving formants for a talking filter | Mouth, pronunciation |
@@ -35,13 +37,21 @@ the coefficient is bounded to the values corresponding to 100–3000 Hz. Excitat
 drives the input and Mix retains some dry attack. Its sound is input-dependent;
 numeric verification is separate from listening acceptance.
 
+Bass Ring multiplies the input by a continuous sine carrier, keeping phase in a
+scratchpad word across samples. Carrier selects 20–220 Hz; Mix retains dry attack.
+The Q15 phase increment gives approximately 1.35-Hz frequency steps at 44.1 kHz,
+so the control is nominal, not an exactly tuned or pitch-tracking oscillator.
+At full wet, a single note produces sum/difference sidebands. It is an experiment
+for bass, with listening acceptance pending. Use low fundamentals, harmonics and
+playing transients when auditioning this library.
+
 From the superproject root, verify the whole batch:
 
 ```bash
 python3 tools/effect_library.py --output /tmp/kestrel-effect-library
 ```
 
-This runs the production compiler, a sample model and the actual core/SVF RTL,
+This runs the production compiler, a sample model and the actual core/SVF/LUT RTL,
 compares every output sample exactly, exercises parameter corners, and checks
 default linear-filter responses. Reports include compiled blocks, maximum cycles
 per sample and source/program hashes. Each render produces a WAV with dry input
@@ -54,15 +64,18 @@ Render your own mono, signed PCM16, 44.1-kHz recording through an effect:
 
 ```bash
 python3 tools/effect_library.py --effect CUBEDRV --param drive=12 \
-  --input guitar.wav --output /tmp/cubic-guitar
+  --input bass.wav --output /tmp/cubic-bass
 ```
 
-The current model/renderer supports MADD, ABS, MIN, MAX, CLAMP and SVF update/read
-programs, with only the final instruction writing c0. Other instructions and
-resource programming fail explicitly. Delay, scratchpad, LUT and polynomial
-effects need further model/renderer coverage; no approximation stands in for
-their RTL. The enclosing SPI controller, mixer and converters are outside this
-loop. Full one-pipeline system verification remains planned.
+The current model/renderer supports MADD, ABS, MIN, MAX, CLAMP, SVF update/read,
+built-in sine/tanh LUT reads and 256-word scratchpad reads/writes. Only the final
+instruction may write c0. The renderer exercises full reset before programming;
+scratchpad values then persist across samples. LUT modeling uses the actual ROM
+words with bit-exact interpolation. Run `python3 tools/test_eff_state.py` for
+exhaustive LUT input checks and an independent scratchpad recurrence test.
+Other opcodes and resource programming fail explicitly; delay and polynomial
+effects still need model/renderer coverage. The enclosing SPI controller, mixer
+and converters are outside this loop. Full one-pipeline system verification remains planned.
 
 To upload verified files, close other UART clients and use the ESP32 USB serial
 port. The script opens one connection, checks FPGA magic/capabilities, stages each
