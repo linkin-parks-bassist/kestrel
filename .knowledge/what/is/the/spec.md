@@ -1,6 +1,6 @@
 ---
 status: green
-revised_at: "2026-10-04T20:09:48+11:00"
+revised_at: "2026-10-04T20:12:46+11:00"
 ---
 
 Kestrel is a programmable effects pedal: an MCU compiles text descriptors and manages presets/UI; an FPGA executes per-sample DSP; hardware hosts audio conversion, I/O and power.
@@ -14,6 +14,8 @@ The requested revision uses one PCB with bare GW2AR-18 and control/UI MCU, integ
 Cost-effectiveness and delivery availability to Sydney govern sourcing: compare landed AUD cost/lead time. Panel balances price, availability and connector complexity at no more than 720p; 800x480 RGB/I2C touch is working target. Existing MIPI panel is excluded. Canonical requirements are in what/is/the/single/board/and/enclosure/design/brief.md. Engineering evaluation retains ESP32-P4, targeting NRW16X v3.x; migration rationale and revision/procurement limits belong to what/is/the/mcu/migration/decision.md.
 
 Firmware and RTL requirements are owned by the Interface and Core what/is/the/spec.md leaves. Shared automated C/RTL tests, a lightweight actual-DSP model with one pipeline, full one-pipeline Verilator verification of authored .effs and physical HIL are required by what/is/the/effect/verification/specification.md. UART debug/control over USB must support .eff filesystem operations and agent-driven device diagnosis. Component details and shared acceptance criteria remain partial.
+
+David plans to experiment with instruction-slot capacity and additional daisy-chained DSP cores, trading additional sample periods of latency for processing capacity. This is an exploration requirement, not a selected topology or changed latency promise. The shared plan owns the experiment; component implementation contracts remain in the Core and Interface trees.
 
 Tentative shared SPI direction: David is considering making the command language almost entirely read/write operations over an address space, to simplify firmware encoding and FPGA control/dispatch. A first addressed read is selected: read32 accepts 24-bit word-aligned addresses and returns four bytes through the existing response mechanism; magic and compiled capability registers allow the MCU to identify its partner. The numeric/protocol alignment owner specifies the concrete shared contract. Future narrower reads and capability-aware instruction rejection or applicable classic-biquad lowering are intended. A complete replacement protocol is not selected. Additional address allocation, writes, side-effect and commit semantics, and exceptions to read/write remain open. Assess the simplification against Kestrel's minimality and performance requirements before agreeing the contract. Do not infer a fabric implementation or Pigen dependency from how the idea arose. The SCK-clocked frontend/clock-domain-crossing work belongs to the Core spec and is a distinct transport decision.
 
