@@ -1,9 +1,11 @@
 ---
 status: green
-revised_at: "2026-10-04T15:07:40+11:00"
+revised_at: "2026-10-04T20:09:48+11:00"
 ---
 
 Kestrel is a programmable effects pedal: an MCU compiles text descriptors and manages presets/UI; an FPGA executes per-sample DSP; hardware hosts audio conversion, I/O and power.
+
+David intends Kestrel to have an enormous library of free, open-source effects. Treat this as a product requirement, not a claim that the present eighteen-descriptor library already fulfills it. The shipped-example owner records current coverage and sonic acceptance; exact release/library acceptance criteria remain open.
 
 The governing engineering ethos is owned by how/to/work/on/kestrel.md: exercise utmost care, preserve the intentionally distilled architecture and conventions, keep code minimal relative to function, and extract exceptional capability/performance with style from constrained hardware. These are design requirements across component work, not optional polishing.
 

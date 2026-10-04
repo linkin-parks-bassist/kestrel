@@ -1,6 +1,6 @@
 ---
 status: green
-revised_at: "2026-10-04T20:05:12+11:00"
+revised_at: "2026-10-04T20:09:48+11:00"
 ---
 
 The firmware/RTL implementation and requirements workstream is active alongside the integrated hardware work. Component implementation plans live in the Interface and Core what/is/the/plan.md leaves; their specs own the component intentions. The shared effect-verification requirements are owned by what/is/the/effect/verification/specification.md.
@@ -17,7 +17,7 @@ Next shared software/RTL steps:
 
 Further protocol design ticket, with no assigned priority: extend the implemented read32/magic/capability contract toward a predominantly read/write SPI language over an address space, coordinating firmware and FPGA under what/is/the/spec.md. Define additional address entries, narrower read24/read16/read8, writes and side-effect/commit semantics before extending read32. Firmware capability probing and unsupported-instruction rejection or applicable classic-biquad lowering remain planned. Keep this shared protocol decision distinct from the Core's SCK-clocked SPI frontend; preserve the current command contract until a replacement is agreed.
 
-Library expansion is active. Continue growing effect families and verification coverage through the compiler/model/RTL/USB loop; the shared verification specification owns acceptance and delay-modulation guidance.
+Grow the library toward David's intended enormous collection of free, open-source effects. Continue expanding musically useful effect families and verification coverage through the compiler/model/RTL/USB loop; establish library release/acceptance criteria as the collection grows. The shared verification specification owns acceptance and delay-modulation guidance.
 
 The ordering of shared infrastructure beyond David's stated priorities is provisional. The current Core image meets its configured timing constraint with a narrow margin; hardware qualification and further DSP-shift work remain under the Core plan. Hardware completion is not a prerequisite for requirements capture or software-only verification.
 
