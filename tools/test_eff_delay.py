@@ -2,9 +2,8 @@
 """Compile delay fixtures and check actual delay RTL through a delayed RAM responder."""
 import argparse
 from pathlib import Path
-import subprocess
 
-from dsp_model import DSP, read_pcm, read_program, saturate, write_pcm
+from dsp_model import read_pcm, read_program, saturate
 from effect_library import ROOT, prepare, verify_case
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -17,11 +16,15 @@ for i, params in enumerate(({}, {'mod_a': 1, 'mod_b': 1},
                            {'mod_a': 1, 'mod_b': .5},
                            {'mod_a': -.5, 'mod_b': -.5},
                            {'mod_a': -.25, 'mod_b': .25},
-                           {'mod_a': -1, 'mod_b': 1})):
+                           {'mod_a': -1, 'mod_b': 1},
+                           {'mod_a': 1, 'mod_b': -0.25},
+                           {'mod_a': 1, 'mod_b': -1})):
     directory = args.output / f'case-{i}'
     result = verify_case(fixtures / 'delay-state.eff', params, directory, dry)
-    if not params or params.get('mod_a', 0) < 0:
+    if not params or params.get('mod_a', 0) < 0 or params.get('mod_b', 0) < 0:
         size, delay = read_program(directory / 'program.bin').delays[0]
+        if params.get('mod_a', 0) > 0 and params.get('mod_b', 0) < 0:
+            delay = 1
         expected = [(dry[n-delay] * min(16384, max(0, n-size) * 64)) >> 14
                     if n >= delay else 0 for n in range(len(dry))]
         assert list(read_pcm(directory / 'rtl.pcm')) == expected
@@ -50,21 +53,16 @@ for name in ('delay-feedback', 'delay-pair'):
         assert list(wet) == expected
     print(f'{name}: {len(signal)} exact samples, {result["max_cycles"]} cycles/sample', flush=True)
 
-# Current negative-offset behavior is an identified RTL defect, not qualified audio.
-directory = args.output / 'negative'
+# A literal zero allocation must also return the last completed write, not
+# the oldest value at the next-to-overwrite position.
+directory = args.output / 'zero-base'
 directory.mkdir(parents=True, exist_ok=True)
-program = directory / 'program.bin'
-subprocess.run([str(ROOT / 'kestrel_interface/bin/lib/compile_eff'),
-                str(fixtures / 'delay-state.eff'), str(program), 'mod_a=1', 'mod_b=-1'], check=True)
-try:
-    DSP(read_program(program)).sample(8192)
-except ValueError as error:
-    assert 'outside its allocated buffer' in str(error)
-else:
-    raise AssertionError('expected the known negative-offset bounds defect')
-write_pcm(directory / 'dry.pcm', [8192]*100)
-result = subprocess.run([str(ROOT / 'kestrel_core/verilator/test/dsp_core/obj_dir/Vcore_test'),
-                         '--render-program', str(program), str(directory / 'dry.pcm'),
-                         str(directory / 'rtl.pcm')], cwd=ROOT / 'kestrel_core', capture_output=True, text=True)
-assert result.returncode != 0 and 'delay access outside its buffer: 60' in result.stderr
-print('Known negative-B offset defect reproduced: address 60 outside 36-word buffer', flush=True)
+effect = directory / 'zero-base.eff'
+effect.write_text((fixtures / 'delay-state.eff').read_text().replace('delay_samples: 8', 'delay_samples: 0'))
+result = verify_case(effect, {}, directory, dry)
+size, configured_delay = read_program(directory / 'program.bin').delays[0]
+assert configured_delay == 0
+expected = [(dry[n-1] * min(16384, max(0, n-size) * 64)) >> 14 if n else 0
+            for n in range(len(dry))]
+assert list(read_pcm(directory / 'rtl.pcm')) == expected
+print(f'Zero base: {len(dry)} exact one-sample outputs, {result["max_cycles"]} cycles/sample', flush=True)

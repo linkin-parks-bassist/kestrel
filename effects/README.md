@@ -87,11 +87,15 @@ words with bit-exact interpolation. Run `python3 tools/test_eff_state.py` for
 exhaustive LUT input checks and an independent scratchpad recurrence test.
 Allocated integer delays also run through the real delay unit using a delayed RAM
 responder: `python3 tools/test_eff_delay.py` checks taps, startup gain, feedback
-and isolated buffers, including negative-A clamping to zero. It separately
-reproduces a remaining negative-B/final-offset bounds bug; avoid modulation that makes the final delay negative. The responder
+and isolated buffers, including negative-A clamping to zero and minimum-one taps
+for zero/negative final offsets. Offset one is the latest completed write; offset
+zero would read the next slot to overwrite. The responder
 does not simulate the SDRAM controller, arbiter or pins.
-Other opcodes and resource programming fail explicitly; polynomial
-and allocated LUT effects still need model/renderer coverage. The enclosing SPI controller, mixer
+Static polynomial allocation and coefficient writes are supported;
+`python3 tools/test_eff_poly.py` checks all signed16 inputs through a compiled
+quadratic/constant fixture. Power arithmetic retains signed16 truncation, including
+the squared negative endpoint's wrap. Live coefficient updates, allocated LUTs
+and other unsupported programming commands fail explicitly. The enclosing SPI controller, mixer
 and converters are outside this loop. Full one-pipeline system verification remains planned.
 
 To upload verified files, close other UART clients and use the ESP32 USB serial

@@ -158,8 +158,9 @@ ESP32 USB with exact SD readback. See the library instructions for usage and
 coverage limits; the old general-filter examples need an optional FPGA build.
 `python3 tools/test_eff_delay.py` checks compiled delay taps, startup fade, feedback
 and isolated buffers through the actual delay unit and a delayed RAM responder.
-Negative A is clamped to zero; a remaining negative-B/final-offset buffer-bounds
-defect is explicitly reproduced by that test.
+Negative A is clamped to zero; final taps clamp to at least one sample, including
+zero and negative requested offsets. `python3 tools/test_eff_poly.py` also checks
+compiled polynomial resources over every signed16 input.
 
 ### Compiler-to-RTL regression
 

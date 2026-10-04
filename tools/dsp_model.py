@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Sample model for the library's compiled arithmetic/SVF/LUT/scratchpad/delay subset.
+"""Sample model for the library's compiled arithmetic/SVF/LUT/scratchpad/delay/polynomial subset.
 
 Consume production programming bytes, not a second .eff parser. Reject resources
 and opcodes whose behavior is not modelled instead of silently approximating them.
@@ -20,14 +20,15 @@ def saturate(value):
 
 
 class Program(list):
-    def __init__(self, instructions, delays):
+    def __init__(self, instructions, delays, polynomials):
         super().__init__(instructions)
         self.delays = delays
+        self.polynomials = polynomials
 
 
 def read_program(path):
     data = Path(path).read_bytes()
-    instructions, registers, delays = {}, {}, []
+    instructions, registers, delays, polynomials = {}, {}, [], []
     pos = 0
     while pos < len(data):
         command = data[pos]
@@ -48,6 +49,28 @@ def read_program(path):
                 raise ValueError('delay allocations exceed memory')
             delays.append((size, delay))
             continue
+        if command == 16:
+            if pos + 3 > len(data):
+                raise ValueError('truncated polynomial allocation')
+            fmt, count, feedback = data[pos:pos+3]
+            pos += 3
+            if fmt > 17 or not count or feedback or len(polynomials) == 16:
+                raise ValueError('allocation outside polynomial model profile')
+            if sum(len(c) for _, c in polynomials) + count >= 128:
+                raise ValueError('polynomial allocations exceed coefficient memory')
+            polynomials.append((fmt, [None] * count))
+            continue
+        if command == 17:
+            if pos + 6 > len(data):
+                raise ValueError('truncated polynomial coefficient')
+            handle = data[pos]
+            target = int.from_bytes(data[pos+1:pos+3], 'big')
+            value = signed(int.from_bytes(data[pos+3:pos+6], 'big'), 18)
+            pos += 6
+            if handle >= len(polynomials) or target >= len(polynomials[handle][1]):
+                raise ValueError('polynomial coefficient outside its allocation')
+            polynomials[handle][1][target] = value
+            continue
         if command not in (2, 3, 4):
             raise ValueError(f'unsupported programming command {command}')
         width = 4 if command == 2 else 2
@@ -67,19 +90,21 @@ def read_program(path):
     if not instructions or sorted(instructions) != list(range(len(instructions))):
         raise ValueError('expected contiguous instruction blocks')
     program = Program([(instructions[i], registers.get((i, 0), 0), registers.get((i, 1), 0))
-                       for i in range(len(instructions))], delays)
+                       for i in range(len(instructions))], delays, polynomials)
     for i, (word, _, _) in enumerate(program):
         op = word & 31
-        if op not in (1, 5, 6, 7, 8, 16, 17, 18, 19, 20, 23, 24, 25, 26):
+        if op not in (1, 5, 6, 7, 8, 16, 17, 18, 19, 20, 23, 24, 25, 26, 27):
             raise ValueError(f'unsupported opcode {op} at block {i}')
         resource = bool(word & 32)
-        if resource != (op in (16, 17, 18, 19, 20)):
+        if resource != (op in (16, 17, 18, 19, 20, 27)):
             raise ValueError('unsupported instruction format')
         handle = word >> 20
         if resource and (handle > 255 or (op == 16 and handle not in (0, 1))):
             raise ValueError('unsupported resource handle')
         if op in (17, 18) and handle >= len(delays):
             raise ValueError('unallocated delay handle')
+        if op == 27 and (handle >= len(polynomials) or None in polynomials[handle][1]):
+            raise ValueError('unallocated or incomplete polynomial coefficients')
         dest = (word >> (16 if resource else 21)) & 15
         if op not in (18, 20, 23) and dest == 0 and i != len(program) - 1:
             raise ValueError('library renderer requires only the final instruction to write c0')
@@ -98,8 +123,8 @@ class Delay:
     def read(self, a, b):
         modulation = signed((max(0, a) * b) >> 15, 16)
         delta = signed(self.delay + ((modulation * signed(self.size >> 4, 16)) >> 11), 20)
-        delta = max(1 - self.size, min(self.size - 1, delta))
-        # RTL compares signed delta with unsigned position: mirror that wire behavior.
+        delta = max(1, min(self.size - 1, delta))
+        # The clamped positive offset wraps only the internal circular address.
         index = (self.position - delta + (self.size if (delta & 0xfffff) > self.position else 0)) & 0xfffff
         if index >= self.size:
             raise ValueError('delay modulation addressed outside its allocated buffer')
@@ -162,6 +187,14 @@ class DSP:
 
             op, shift = word & 31, (word >> 25) & 31
             dest = (word >> (16 if word & 32 else 21)) & 15
+            if op == 27:
+                fmt, coefficients = self.program.polynomials[word >> 20]
+                value, power, total = operand(6), 32768, 0
+                for coefficient in coefficients:
+                    total += coefficient * power
+                    power = signed((value * power) >> 15, 16)
+                channels[dest] = saturate(total >> (17 - fmt))
+                continue
             if op == 18:
                 self.delays[word >> 20].write(operand(6))
                 continue

@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import json
 import math
+import os
 from pathlib import Path
 import subprocess
 import wave
@@ -86,7 +87,7 @@ def verify_case(effect, params, directory, dry):
     expected = [model.sample(x) for x in dry]
     write_pcm(raw_input, dry)
     output = directory / 'rtl.pcm'
-    result = command([ROOT / 'kestrel_core/verilator/test/dsp_core/obj_dir/Vcore_test',
+    result = command([ROOT / 'kestrel_core/verilator/test/dsp_core' / os.environ.get('CORE_TEST_BUILD', 'obj_dir') / 'Vcore_test',
                       '--render-program', program, raw_input, output], capture_output=True, text=True,
                      cwd=ROOT / 'kestrel_core')
     actual = read_pcm(output)
