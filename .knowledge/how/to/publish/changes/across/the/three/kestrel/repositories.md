@@ -1,15 +1,15 @@
 ---
 status: green
-revised_at: "2026-10-06T18:09:37+11:00"
+revised_at: "2026-10-06T18:16:02+11:00"
 ---
 
 Use main for David's software work and publication; the knowledge-trees topic branch is not the intended ongoing destination. Preserve existing main changes when integrating a topic branch. Never force-push or discard divergent commits.
 
 Commit and push each changed child repository before committing its new gitlink in the superproject. Configured origins are linkin-parks-bassist/m-interface, m-fpga, m-pcb and kestrel on GitHub. Child URLs redirect to kestrel-interface, kestrel-core and kestrel-pcb and still work. Verify local commits against remote refs.
 
-Interface main 9bea6189433e265b226426c51b9fb8fcd0fd23fb and Core main ba709d2b0437f3312f4d2b0c5a84408fdf49041f are pushed; remote heads match. Interface includes descriptor/expression lifetime and reload handling, discovery metadata, bounded desktop discovery and opt-in renderer experiments. Its merge preserves main's time-expression hooks with checked scope initialization, library compatibility and epoch preservation on rejected program submission. Production catalogue/worker architecture remains for David's review. Core includes compiled-program SPI/controller and full-engine simulation/read32 fixtures. Parent gitlinks must name those child commits.
+Interface main 6f6d4d0ee4fd91a3fbeec4114516e733b4d88e89 and Core main ba709d2b0437f3312f4d2b0c5a84408fdf49041f are pushed; remote heads match. Interface includes descriptor/expression lifetime and reload handling, discovery metadata, bounded desktop discovery and opt-in renderer experiments. Its merge preserves main's time-expression hooks with checked scope initialization, library compatibility and epoch preservation on rejected program submission. Desktop header dependencies prevent stale context storage after layout changes. Production catalogue/worker architecture remains for David's review. Core includes compiled-program SPI/controller and full-engine simulation/read32 fixtures. Parent gitlinks must name those child commits.
 
-Checks pass 212 Interface tests, twelve scope-allocation failure boundaries plus discovery-copy fault recovery, DSP-core/SPI-controller suites and full-engine mapped read32. These do not establish complete physical audio/UI acceptance. Installed-image identities and experimental limits belong to component owners; installed firmware predates the time-hook merge. Unpublished Clockwork's long maximum-delay run remains pending.
+Checks pass 212 Interface tests, twelve scope-allocation failure boundaries plus discovery-copy fault recovery, DSP-core/SPI-controller suites and full-engine mapped read32. The rebuilt desktop filter smoke passes four pixel-identical captures. These do not establish complete physical audio/UI acceptance. Installed-image identities and experimental limits belong to component owners; installed firmware predates the time-hook merge. Unpublished Clockwork's long maximum-delay run remains pending.
 
 PCB 8f8222e42b4ad904c555a4da1915754a677bf668 is pushed and remote-verified on rev-b-integrated-pcb. Hardware state, trial replay evidence and unresolved adoption/qualification belong to what/is/the/pcb/design/status.md and circuit owners. Software publication preserves unrelated PCB edits and its gitlink unless publishing a separately verified child update.
 
