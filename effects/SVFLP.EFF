@@ -1,6 +1,10 @@
 v1.0
 
 .INFO
+description: "Two-pole resonant low-pass filter with cutoff and resonance controls."
+keywords: {"low pass", "lowpass", "low-pass", "cutoff", "resonance", "two pole"}
+instruments: {"bass"}
+types: {"filter"}
 name: "SVF Low Pass"
 
 .PARAMETERS

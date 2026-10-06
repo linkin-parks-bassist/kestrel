@@ -1,0 +1,28 @@
+menu "SQLite catalogue probe"
+config KT_PROBE_RAW_READ
+    bool "Read SQLite pages with lseek/read instead of stdio"
+    default n
+    help
+        Compare the same immutable fixture using direct file descriptor reads.
+        This is a read-cost experiment, not a production VFS selection.
+config KT_PROBE_DMA_READ
+    bool "Read through one aligned internal 4-KiB buffer"
+    depends on KT_PROBE_RAW_READ
+    default n
+    help
+        Test whether SQLite page alignment causes single-sector SD transfers.
+        The buffer copies reads; it is not a cache or a production allocation policy.
+config KT_PROBE_COMPOSED
+    bool "Use the multi-axis fixture"
+    default n
+    help
+        Compare ordered membership checks with covering-facet seeds and verify
+        complete paged results against an independent C predicate evaluator.
+config KT_PROBE_ROWS
+    int "Multi-axis fixture effect count"
+    range 1 1000000
+    default 10000
+    help
+        Larger fixtures require more construction memory and longer complete walks.
+        This changes synthetic scale, not metadata realism or production capacity.
+endmenu

@@ -1,6 +1,6 @@
 ---
 status: green
-revised_at: "2026-10-04T20:45:08+11:00"
+revised_at: "2026-10-06T05:03:37+11:00"
 ---
 
 Kestrel is a programmable effects pedal: an MCU compiles text descriptors and manages presets/UI; an FPGA executes per-sample DSP; hardware hosts audio conversion, I/O and power.
@@ -11,7 +11,7 @@ The governing engineering ethos is owned by how/to/work/on/kestrel.md: exercise 
 
 The requested revision uses one PCB with bare GW2AR-18 and control/UI MCU, integrated power, SMD audio electronics and underside through-hole jacks, mono in/out, two footswitches, a 5-inch capacitive panel and coordinated enclosure. Replace SGTL5000 with an inexpensive, available alternative, preferably hardware-configured ADC/DAC pair. Work includes biasing, level matching, supplies, clocks and backend migration. PCM1808/PCM5102A is the engineering selection, pending validation. Converters remain slaves with FPGA MCLK/BCLK/LRCLK.
 
-The integrated board must retain SD-backed effect/preset/sequence storage and USB mass-storage access. Rev-B currently omits the socket and SDMMC circuitry, and the carrier's six SD GPIOs collide with the present RGB assignment. Resolve SD hardware and the shared GPIO contract before adopting/finalizing display routing or fabrication; current placement completeness applies only to instantiated circuitry. The bare-MCU support owner records the source-backed omission and next checks.
+The integrated board must retain SD-backed effect/preset/sequence storage and USB mass-storage access. Rev-B currently omits the socket and SDMMC circuitry, and the carrier's six SD GPIOs collide with the present RGB assignment. Resolve SD hardware and the shared GPIO contract before adopting/finalizing display routing or fabrication; current placement completeness applies only to instantiated circuitry. what/is/the/integrated/sd/card/circuit.md owns restoration and its constraints.
 
 Cost-effectiveness and delivery availability to Sydney govern sourcing: compare landed AUD cost/lead time. Panel balances price, availability and connector complexity at no more than 720p; 800x480 RGB/I2C touch is working target. Existing MIPI panel is excluded. Canonical requirements are in what/is/the/single/board/and/enclosure/design/brief.md. Engineering evaluation retains ESP32-P4, targeting NRW16X v3.x; migration rationale and revision/procurement limits belong to what/is/the/mcu/migration/decision.md.
 

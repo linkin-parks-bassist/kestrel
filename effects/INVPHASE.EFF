@@ -1,6 +1,10 @@
 v1.0
 
 .INFO
+description: "Invert signal polarity with adjustable output attenuation."
+keywords: {"polarity", "phase invert", "invert", "level"}
+instruments: {"bass"}
+types: {"utility"}
 name: "Phase Invert"
 
 .PARAMETERS

@@ -1,6 +1,10 @@
 v1.0
 
 .INFO
+description: "Full-wave rectification creates octave-like harmonics, with DC removal and level control."
+keywords: {"octave", "rectifier", "full wave", "harmonics", "DC removal"}
+instruments: {"bass"}
+types: {"octave", "distortion"}
 name: "Octave Rectifier"
 
 .PARAMETERS

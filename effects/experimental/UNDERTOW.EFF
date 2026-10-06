@@ -1,0 +1,112 @@
+v1.0
+
+.INFO
+name: "Pitch Undertow"
+cname: "pitch_undertow"
+description: "Two crossfaded moving delay heads make granular pitch shifts in a damped echo loop; short grains add detuned sidebands."
+keywords: {"pitch shift", "granular", "interval", "two heads", "grain", "echo", "feedback", "rising", "falling"}
+instruments: {"bass"}
+types: {"pitch", "delay", "modulation"}
+
+.PARAMETERS
+shift: (name: "Interval", default: 7, min: -24, max: 24, units: "st")
+grain: (name: "Grain", default: 200, min: 20, max: 300, units: "ms")
+echo: (name: "Echo", default: 180, min: 0, max: 600, units: "ms")
+feedback: (name: "Memory", default: 0.55, min: 0, max: 0.85)
+damping: (name: "Dust", default: 4000, min: 200, max: 12000, units: "Hz", scale: "logarithmic")
+pressure: (name: "Drive", default: 1.4, min: 1, max: 6)
+wet: (name: "Ghosts", default: 1.4, min: 0, max: 2)
+dry: (name: "Dry", default: 1, min: 0, max: 1)
+
+.DEFS
+ratio: 2^(shift/12)
+drift: (1-ratio)*128*1000/(grain*sample_rate)
+pole: 1/(1+2*pi*damping/sample_rate)
+
+.RESOURCES
+subphase: (type: "mem")
+phase: (type: "mem")
+dark: (type: "mem")
+line: (type: "delay", delay_samples: 1, size: 16384)
+loop: (type: "delay", delay_samples: 1, size: 32768)
+
+.CODE
+mem_read $subphase c1
+add c1 [drift] c1
+max c1 [0.25] c2
+sub c2 [0.25] c2
+min c2 [1/32768] c2
+mul c2 [128] c2
+mul c2 [128] c2
+min c1 [-0.25] c4
+sub c4 [-0.25] c4
+max c4 [-1/32768] c4
+mul c4 [128] c4
+mul c4 [128] c4
+add c2 c4 c2
+sub c1 c2 c1
+mem_write c1 $subphase
+mem_read $phase c3
+madd c2 [1/256] c3 c3
+max c3 [0.25] c2
+sub c2 [0.25] c2
+min c2 [1/32768] c2
+mul c2 [128] c2
+mul c2 [128] c2
+min c3 [-0.25] c4
+sub c4 [-0.25] c4
+max c4 [-1/32768] c4
+mul c4 [128] c4
+mul c4 [128] c4
+add c2 c4 c2
+sub c3 c2 c3
+mem_write c3 $phase
+madd c1 [1/256] c3 c3
+max c3 [0.25] c2
+sub c2 [0.25] c2
+min c2 [1/32768] c2
+mul c2 [128] c2
+mul c2 [128] c2
+min c3 [-0.25] c4
+sub c4 [-0.25] c4
+max c4 [-1/32768] c4
+mul c4 [128] c4
+mul c4 [128] c4
+add c2 c4 c2
+sub c3 c2 c3
+add c3 [0.25] c4
+max c4 [0.25] c2
+sub c2 [0.25] c2
+min c2 [1/32768] c2
+mul c2 [128] c2
+mul c2 [128] c2
+min c4 [-0.25] c5
+sub c5 [-0.25] c5
+max c5 [-1/32768] c5
+mul c5 [128] c5
+mul c5 [128] c5
+add c2 c5 c2
+sub c4 c2 c4
+madd c3 [2] [0.5] c5
+delay_mread $line c5 [grain*sample_rate/(1000*16384)] c6
+madd c4 [2] [0.5] c5
+delay_mread $line c5 [grain*sample_rate/(1000*16384)] c7
+abs c3 c8
+madd c8 [-4] [1] c8
+clamp c8 [0] [1] c8
+mul c6 c8 c6
+sub [1] c8 c8
+madd c7 c8 c6 c6
+mem_read $dark c7
+mul c7 [pole] c7
+madd c6 [1-pole] c7 c6
+mem_write c6 $dark
+delay_mread $loop [1] [echo*sample_rate/(1000*32768)] c9
+delay_write c6 $loop
+mul c9 [feedback/pressure] c9
+madd c0 [1-feedback] c9 c9
+mul c9 [pressure] c9
+clamp c9 [-0.95] [0.95] c9
+delay_write c9 $line
+mul c0 [dry] c9
+madd c6 [wet] c9 c0

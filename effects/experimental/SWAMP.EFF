@@ -1,0 +1,75 @@
+v1.0
+
+.INFO
+description: "Three interacting delay returns with metallic ring modulation, damped feedback and envelope ducking."
+keywords: {"multi tap", "delay", "feedback", "ring modulation", "metallic", "damping", "ducking"}
+instruments: {"bass"}
+types: {"delay", "modulation"}
+name: "Swamp Machine"
+
+.PARAMETERS
+time: (name: "Time", default: 180, min: 20, max: 600, units: "ms")
+scatter: (name: "Scatter", default: 0.65, min: 0, max: 1)
+feedback: (name: "Persistence", default: 0.6, min: 0, max: 0.85)
+damping: (name: "Damping", default: 1500, min: 80, max: 6000, units: "Hz", scale: "logarithmic")
+metal: (name: "Metal", default: 0.8, min: 0, max: 1)
+carrier: (name: "Carrier", default: 73, min: 20, max: 400, units: "Hz", scale: "logarithmic")
+bloom: (name: "Bloom", default: 0.3, min: 0, max: 1)
+mix: (name: "Mix", default: 0.65, min: 0, max: 0.8)
+return: (name: "Return", default: 18, min: 0, max: 24, units: "dB")
+dry: (name: "Dry", default: 1, min: 0, max: 1)
+
+.DEFS
+damp_a: 1/(1+2*pi*damping/sample_rate)
+
+.RESOURCES
+long: (type: "delay", delay_samples: 1, size: 32768)
+middle: (type: "delay", delay_samples: 1, size: 32768)
+short: (type: "delay", delay_samples: 1, size: 32768)
+phase: (type: "mem")
+envelope: (type: "mem")
+dark: (type: "mem")
+wave: (type: "polynomial", coefs: {0, 3.1401887343, 0, -5.1363218456, 0, 2.4271414428, 0, -0.4310083315})
+
+.CODE
+delay_mread $long [time*sample_rate/(1000*32768)] [1] c1
+delay_mread $middle [time*(0.51+0.22*scatter)*sample_rate/(1000*32768)] [1] c2
+delay_mread $short [time*(0.23+0.18*scatter)*sample_rate/(1000*32768)] [1] c3
+mul c1 [1/3] c4
+madd c2 [1/3] c4 c4
+madd c3 [-1/3] c4 c4
+mem_read $phase c5
+add c5 [carrier/sample_rate] c6
+max c6 [0.5] c7
+sub c7 [0.5] c7
+min c7 [1/32768] c7
+mul c7 [128] c7
+mul c7 [256] c7
+sub c6 c7 c5
+mem_write c5 $phase
+mul c5 [2] c5
+poly c5 $wave c5
+mul c4 c5 c6
+mul c4 [1-metal] c4
+madd c6 [metal] c4 c4
+mem_read $dark c5
+mul c5 [damp_a] c5
+madd c4 [1-damp_a] c5 c5
+mem_write c5 $dark
+mul c0 [1-feedback] c6
+madd c5 [feedback] c6 c6
+delay_write c6 $long
+delay_write c6 $middle
+delay_write c6 $short
+mul c0 [0.5] c7
+abs c7 c7
+mem_read $envelope c8
+mul c8 [0.998] c8
+madd c7 [0.002] c8 c8
+mem_write c8 $envelope
+mul c8 [24*bloom] c8
+sub [1] c8 c8
+max c8 [0.1] c8
+mul c5 c8 c5
+mul c0 [dry] c9
+madd c5 [mix*10^(return/20)] c9 c0

@@ -1,6 +1,10 @@
 v1.0
 
 .INFO
+description: "Manually sweep a resonant peak over the dry signal, with adjustable bite."
+keywords: {"wah", "manual sweep", "resonant peak", "resonance", "dry bass"}
+instruments: {"bass"}
+types: {"filter", "wah"}
 name: "Resonant Wah"
 
 .PARAMETERS

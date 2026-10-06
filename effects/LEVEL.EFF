@@ -1,6 +1,10 @@
 v1.0
 
 .INFO
+description: "Clean level attenuation without changing the signal shape."
+keywords: {"level", "gain", "volume", "attenuation", "clean"}
+instruments: {"bass"}
+types: {"utility"}
 name: "Clean Level"
 
 .PARAMETERS

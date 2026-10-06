@@ -154,7 +154,8 @@ Run `python3 tools/effect_library.py` to compare compiled effects against
 the sample model and actual core/SVF/LUT RTL, with control corners, response checks,
 listening WAVs and sample-cycle costs. The same tool accepts a mono PCM16,
 44.1-kHz recording. `tools/upload_effects.py` deploys verified descriptors over
-ESP32 USB with exact SD readback. See the library instructions for usage and
+ESP32 USB with exact SD readback; `--reload` updates existing loaded identities live.
+See the library instructions for usage and
 coverage limits; the old general-filter examples need an optional FPGA build.
 `python3 tools/test_eff_delay.py` checks compiled delay taps, startup fade, feedback
 and isolated buffers through the actual delay unit and a delayed RAM responder.
@@ -169,6 +170,13 @@ installed. It builds the Interface host compiler, compiles the readback `.eff`
 fixture and checks its execution and signed scratchpad readback in the DSP core.
 This focused test excludes SPI transport, mixing, delay/filter/LUT engines and
 physical audio; it is one step toward full one-pipeline effect verification.
+
+`python3 tools/test_fpga_read_errors.py` compiles the MCU read helpers against a
+SPI stub to check sticky-error clearing before request payloads and reporting
+of fresh errors. It requires a host C compiler and does not simulate RTL timing.
+
+The separate [carrier SQLite probe](tools/sqlite_probe/README.md) checks SD-backed
+facet paging and tied-name ordering without adding SQLite to production firmware.
 
 ### ESP32 build
 

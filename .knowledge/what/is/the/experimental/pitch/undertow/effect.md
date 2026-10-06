@@ -1,0 +1,18 @@
+---
+status: green
+revised_at: "2026-10-06T11:14:19+11:00"
+---
+
+effects/experimental/UNDERTOW.EFF is a deployed granular pitch-delay experiment, cname pitch_undertow, compiling into 79 blocks. Audition remains open.
+
+Interval spans −24..24 semitones; Grain 20..300 ms/default 200 sets excursion. Two phase-opposed triangular windows crossfade moving delay heads. Signed fine/coarse scratchpad counters drive slope (1−2^(Interval/12))/grain. Integer taps have no interpolation. The 16388-word moving buffer feeds a 32772-word damped echo line. Memory 0..0.85, Echo 0..600 ms, Drive 1..6, Dust, Ghosts and Dry shape the loop. Dividing feedback by Drive puts its extra gain outside the linear recurrence; a ±0.95 clamp bounds writes. Default Dry is unity and Ghosts is 1.4.
+
+Grain size affects tuning/sidebands. On a 110-Hz model tone, Grain 50 ms yields crossing rates approximately 50.009/169.808/230.007 Hz for intervals −12/+7/+12, rather than 55/164.814/220. Grain 200 ms makes that particular input period commensurate: 54.946/164.821/220.106 Hz. These probes demonstrate the limitation, not arbitrary-input pitch accuracy. Source advertises granular shifts/short-grain detuned sidebands, not transparent transposition.
+
+Nine core-strobe cases pass: four tones, signed dry bypass, silence, DC, default bass/tail and extreme controls, totaling 665272 exact model/RTL outputs at 844 cycles/sample. Decoding checks 79 blocks, two delay allocations, three reads/two writes and three scratchpad handles. The octave/fifth tests use the commensurate 200-ms/110-Hz fixture; a 50-ms octave-up test preserves its approximately 230-Hz limitation. Evidence: /tmp/kestrel-undertow-qualified/results.json and /tmp/kestrel-undertow-qualified.log.
+
+A separate full-engine run passes 50000 default outputs through SPI/controller/mixer and mapped read32, with four-frame latency and 1411 observed warmup executions used to prime the model. Four malformed programs reject before simulation. This does not independently predict startup or qualify physical SDRAM. Evidence: /tmp/kestrel-undertow-engine/results.json and /tmp/kestrel-undertow-engine.log.
+
+Default bass output has RMS gain 1.278, relative RMS change 0.786 and peak 9908 codes. Tail RMS falls from 1473.23 to 171.15 codes across the measured quarter-second windows, also passing the current decay criterion on retained PCM (/tmp/kestrel-undertow-qualified/bass/current-decay-check.json). Extreme controls peak at 6876 codes; tail RMS falls from 331.93 to 18 codes, passing the same criterion. Broader signed phase/tap sweeps, spectra, physical waveforms, sustained control movement and audition remain open. tools/test_eff_undertow.py defines these nine cases. Both bass/tail PCMs were independently checked against the current decay criterion after the render process used its earlier threshold; current-decay-check.json files retain those results.
+
+Carrier publication/readback and startup discovery pass; all 21 metadata rows equal the production host parser. Normal UI activation works alone and after Crowd Chorus. All eight targets queue. Observed convergence covers ±24 st, Grain 20/300 ms, Echo 600 ms and both ends of the other five controls; a dial drag changes Interval. Solo Grain/Echo reach 300/600 ms. FPGA status stays 0x01 without command error. The temporary preset is removed, Bass Ring restored unchanged and UART closed. Idle snapshots reach 200 FPS/1% displayed CPU; intrusive UART dumps do not measure sustained dial performance. Evidence: /tmp/kestrel-undertow-upload.log and /tmp/kestrel-undertow-carrier.log. Current source: 2733 bytes, SHA-256 4b935ade5a91bebc23c6bb2e6d38ac6b36bed07682dc1eba7a49249fb3971a0c.

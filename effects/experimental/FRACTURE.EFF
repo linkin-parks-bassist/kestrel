@@ -1,0 +1,170 @@
+v1.0
+
+.INFO
+description: "Tempo-sized memory with five moving heads, voice collisions and envelope-shaped nonlinear feedback."
+keywords: {"rhythmic delay", "tempo", "memory", "five voices", "moving heads", "collision", "envelope", "feedback"}
+instruments: {"bass"}
+types: {"delay", "modulation", "distortion"}
+name: "Fracture Memory"
+cname: "fracture_memory"
+
+.SETTINGS
+tempo: (name: "Tempo", type: "int", default: 120, min: 30, max: 300, units: "BPM", page: "main")
+
+.PARAMETERS
+rate: (name: "Drift", default: 0.7, min: 0.1, max: 4, units: "Hz", scale: "logarithmic")
+fracture: (name: "Fracture", default: 0.35, min: 0, max: 0.7)
+spread: (name: "Voices", default: 0.85, min: 0, max: 1)
+feedback: (name: "Memory", default: 0.68, min: 0, max: 0.88)
+collision: (name: "Collision", default: 0.7, min: 0, max: 4)
+pressure: (name: "Pressure", default: 1.6, min: 1, max: 8)
+damping: (name: "Dust", default: 3500, min: 100, max: 12000, units: "Hz", scale: "logarithmic")
+grip: (name: "Grip", default: 0.75, min: 0, max: 1)
+mix: (name: "Ghosts", default: 1.4, min: 0, max: 2)
+dry: (name: "Dry", default: 1, min: 0, max: 1)
+
+.DEFS
+floor_pole: 1/(1+2*pi*20/sample_rate)
+pole: 1/(1+2*pi*damping/sample_rate)
+line_words: sample_rate*240/tempo+16
+
+.RESOURCES
+subphase: (type: "mem")
+phase: (type: "mem")
+envelope: (type: "mem")
+dark: (type: "mem")
+ground: (type: "mem")
+line: (type: "delay", delay_samples: 1, size: line_words)
+
+.CODE
+mem_read $subphase c1
+add c1 [rate*128/sample_rate] c1
+max c1 [0.25] c2
+sub c2 [0.25] c2
+min c2 [1/32768] c2
+mul c2 [128] c2
+mul c2 [128] c2
+sub c1 c2 c1
+mem_write c1 $subphase
+mem_read $phase c3
+madd c2 [1/256] c3 c3
+max c3 [0.25] c4
+sub c4 [0.25] c4
+min c4 [1/32768] c4
+mul c4 [128] c4
+mul c4 [128] c4
+sub c3 c4 c3
+mem_write c3 $phase
+abs c0 c9
+mem_read $envelope c10
+mul c10 [0.999] c10
+madd c9 [0.001] c10 c10
+mem_write c10 $envelope
+mul c10 [6] c10
+clamp c10 [0] [1] c10
+add c3 [-2*spread/10] c4
+max c4 [0.25] c5
+sub c5 [0.25] c5
+min c5 [1/32768] c5
+mul c5 [128] c5
+mul c5 [128] c5
+sub c4 c5 c4
+min c4 [-0.25] c5
+sub c5 [-0.25] c5
+max c5 [-1/32768] c5
+mul c5 [128] c5
+mul c5 [128] c5
+sub c4 c5 c4
+mul c4 [4] c4
+madd c4 [fracture/4] [0.075+fracture/4] c4
+delay_mread $line c4 [1] c5
+mov c5 c8
+mul c5 [0.2] c6
+add c3 [-1*spread/10] c4
+max c4 [0.25] c5
+sub c5 [0.25] c5
+min c5 [1/32768] c5
+mul c5 [128] c5
+mul c5 [128] c5
+sub c4 c5 c4
+min c4 [-0.25] c5
+sub c5 [-0.25] c5
+max c5 [-1/32768] c5
+mul c5 [128] c5
+mul c5 [128] c5
+sub c4 c5 c4
+mul c4 [4] c4
+madd c4 [fracture/4] [0.2+fracture/4] c4
+delay_mread $line c4 [1] c5
+madd c5 [0.2] c6 c6
+add c3 [0*spread/10] c4
+max c4 [0.25] c5
+sub c5 [0.25] c5
+min c5 [1/32768] c5
+mul c5 [128] c5
+mul c5 [128] c5
+sub c4 c5 c4
+min c4 [-0.25] c5
+sub c5 [-0.25] c5
+max c5 [-1/32768] c5
+mul c5 [128] c5
+mul c5 [128] c5
+sub c4 c5 c4
+mul c4 [4] c4
+madd c4 [fracture/4] [0.325+fracture/4] c4
+delay_mread $line c4 [1] c5
+madd c5 [0.2] c6 c6
+mul c5 c8 c11
+add c3 [1*spread/10] c4
+max c4 [0.25] c5
+sub c5 [0.25] c5
+min c5 [1/32768] c5
+mul c5 [128] c5
+mul c5 [128] c5
+sub c4 c5 c4
+min c4 [-0.25] c5
+sub c5 [-0.25] c5
+max c5 [-1/32768] c5
+mul c5 [128] c5
+mul c5 [128] c5
+sub c4 c5 c4
+mul c4 [4] c4
+madd c4 [fracture/4] [0.45+fracture/4] c4
+delay_mread $line c4 [1] c5
+madd c5 [0.2] c6 c6
+add c3 [2*spread/10] c4
+max c4 [0.25] c5
+sub c5 [0.25] c5
+min c5 [1/32768] c5
+mul c5 [128] c5
+mul c5 [128] c5
+sub c4 c5 c4
+min c4 [-0.25] c5
+sub c5 [-0.25] c5
+max c5 [-1/32768] c5
+mul c5 [128] c5
+mul c5 [128] c5
+sub c4 c5 c4
+mul c4 [4] c4
+madd c4 [fracture/4] [0.575+fracture/4] c4
+delay_mread $line c4 [1] c5
+madd c5 [0.2] c6 c6
+madd c11 [collision] c6 c6
+mem_read $dark c7
+mul c7 [pole] c7
+madd c6 [1-pole] c7 c6
+mem_write c6 $dark
+mem_read $ground c11
+mul c11 [floor_pole] c11
+madd c6 [1-floor_pole] c11 c11
+mem_write c11 $ground
+sub c6 c11 c6
+madd c10 [1-grip] [grip] c10
+mul c6 c10 c7
+mul c7 [feedback/pressure] c7
+madd c0 [1-feedback] c7 c7
+mul c7 [pressure] c7
+clamp c7 [-0.8] [0.8] c7
+delay_write c7 $line
+mul c0 [dry] c7
+madd c6 [mix] c7 c0

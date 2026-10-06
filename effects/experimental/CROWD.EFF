@@ -1,0 +1,165 @@
+v1.0
+
+.INFO
+description: "Five moving delay voices with phase spread, spacing and envelope-sensitive depth over dry input."
+keywords: {"chorus", "five voices", "multi tap", "spread", "spacing", "envelope", "short delay"}
+instruments: {"bass"}
+types: {"chorus", "modulation", "delay"}
+name: "Crowd Chorus"
+
+.PARAMETERS
+rate: (name: "Sweep", default: 0.45, min: 0.1, max: 3, units: "Hz", scale: "logarithmic")
+depth: (name: "Depth", default: 2.5, min: 0, max: 8, units: "ms")
+spread: (name: "Spread", default: 0.8, min: 0, max: 1)
+width: (name: "Spacing", default: 5, min: 0, max: 8, units: "ms")
+feel: (name: "Feel", default: 0.7, min: 0, max: 1)
+mix: (name: "Voices", default: 0.35, min: 0, max: 1)
+dry: (name: "Dry", default: 1, min: 0, max: 1)
+
+.DEFS
+low_a: 1/(1+2*pi*150/sample_rate)
+
+.RESOURCES
+subphase: (type: "mem")
+phase: (type: "mem")
+envelope: (type: "mem")
+low: (type: "mem")
+wave: (type: "polynomial", coefs: {0, 3.1401887343, 0, -5.1363218456, 0, 2.4271414428, 0, -0.4310083315})
+line: (type: "delay", delay_samples: 8*sample_rate/1000, size: 2048)
+
+.CODE
+mem_read $subphase c1
+add c1 [rate*128/sample_rate] c1
+max c1 [0.25] c2
+sub c2 [0.25] c2
+min c2 [1/32768] c2
+mul c2 [128] c2
+mul c2 [128] c2
+sub c1 c2 c1
+mem_write c1 $subphase
+mem_read $phase c3
+madd c2 [1/256] c3 c3
+max c3 [0.25] c4
+sub c4 [0.25] c4
+min c4 [1/32768] c4
+mul c4 [128] c4
+mul c4 [128] c4
+sub c3 c4 c3
+mem_write c3 $phase
+abs c0 c9
+mem_read $envelope c10
+mul c10 [0.999] c10
+madd c9 [0.001] c10 c10
+mem_write c10 $envelope
+mul c10 [6] c10
+clamp c10 [0] [1] c10
+madd c10 [feel] [1-feel] c10
+add c3 [-2*spread/10] c4
+max c4 [0.25] c5
+sub c5 [0.25] c5
+min c5 [1/32768] c5
+mul c5 [128] c5
+mul c5 [128] c5
+sub c4 c5 c4
+min c4 [-0.25] c5
+sub c5 [-0.25] c5
+max c5 [-1/32768] c5
+mul c5 [128] c5
+mul c5 [128] c5
+sub c4 c5 c4
+mul c4 [4] c4
+poly c4 $wave c4
+madd c4 [0.5] [0.5] c4
+mul c4 c10 c4
+madd c4 [depth*sample_rate/(1000*2048)] [0*width*sample_rate/(4000*2048)] c4
+delay_mread $line c4 [1] c5
+mul c5 [0.2] c6
+add c3 [-1*spread/10] c4
+max c4 [0.25] c5
+sub c5 [0.25] c5
+min c5 [1/32768] c5
+mul c5 [128] c5
+mul c5 [128] c5
+sub c4 c5 c4
+min c4 [-0.25] c5
+sub c5 [-0.25] c5
+max c5 [-1/32768] c5
+mul c5 [128] c5
+mul c5 [128] c5
+sub c4 c5 c4
+mul c4 [4] c4
+poly c4 $wave c4
+madd c4 [0.5] [0.5] c4
+mul c4 c10 c4
+madd c4 [depth*sample_rate/(1000*2048)] [1*width*sample_rate/(4000*2048)] c4
+delay_mread $line c4 [1] c5
+madd c5 [0.2] c6 c6
+add c3 [0*spread/10] c4
+max c4 [0.25] c5
+sub c5 [0.25] c5
+min c5 [1/32768] c5
+mul c5 [128] c5
+mul c5 [128] c5
+sub c4 c5 c4
+min c4 [-0.25] c5
+sub c5 [-0.25] c5
+max c5 [-1/32768] c5
+mul c5 [128] c5
+mul c5 [128] c5
+sub c4 c5 c4
+mul c4 [4] c4
+poly c4 $wave c4
+madd c4 [0.5] [0.5] c4
+mul c4 c10 c4
+madd c4 [depth*sample_rate/(1000*2048)] [2*width*sample_rate/(4000*2048)] c4
+delay_mread $line c4 [1] c5
+madd c5 [0.2] c6 c6
+add c3 [1*spread/10] c4
+max c4 [0.25] c5
+sub c5 [0.25] c5
+min c5 [1/32768] c5
+mul c5 [128] c5
+mul c5 [128] c5
+sub c4 c5 c4
+min c4 [-0.25] c5
+sub c5 [-0.25] c5
+max c5 [-1/32768] c5
+mul c5 [128] c5
+mul c5 [128] c5
+sub c4 c5 c4
+mul c4 [4] c4
+poly c4 $wave c4
+madd c4 [0.5] [0.5] c4
+mul c4 c10 c4
+madd c4 [depth*sample_rate/(1000*2048)] [3*width*sample_rate/(4000*2048)] c4
+delay_mread $line c4 [1] c5
+madd c5 [0.2] c6 c6
+add c3 [2*spread/10] c4
+max c4 [0.25] c5
+sub c5 [0.25] c5
+min c5 [1/32768] c5
+mul c5 [128] c5
+mul c5 [128] c5
+sub c4 c5 c4
+min c4 [-0.25] c5
+sub c5 [-0.25] c5
+max c5 [-1/32768] c5
+mul c5 [128] c5
+mul c5 [128] c5
+sub c4 c5 c4
+mul c4 [4] c4
+poly c4 $wave c4
+madd c4 [0.5] [0.5] c4
+mul c4 c10 c4
+madd c4 [depth*sample_rate/(1000*2048)] [4*width*sample_rate/(4000*2048)] c4
+delay_mread $line c4 [1] c5
+madd c5 [0.2] c6 c6
+delay_write c0 $line
+mem_read $low c9
+mul c9 [low_a] c9
+madd c6 [1-low_a] c9 c9
+mem_write c9 $low
+sub c6 c9 c6
+mul c0 [dry] c7
+madd c6 [mix] c7 c0
+

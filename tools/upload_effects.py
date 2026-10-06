@@ -2,7 +2,7 @@
 """Deploy verified .eff files over UART/USB with exact byte readback.
 
 One persistent connection; existing differing files require --replace. Uploads
-do not reload descriptors or alter presets. Reboot deliberately to discover them.
+reload existing identities only with --reload. New identities require discovery.
 """
 import argparse
 import hashlib
@@ -48,6 +48,14 @@ class Console:
         result = re.search(rb'KEST eff-file result=(-?\d+) errno=(\d+)', data)
         return int(result[1]), int(result[2]), data
 
+    def reload(self, name):
+        reply = self.command('eff-reload ' + name,
+                             rb'KEST eff-reload result=\d+ affected=\d+')
+        result = re.search(rb'KEST eff-reload result=(\d+) affected=(\d+)', reply)
+        if int(result[1]):
+            raise RuntimeError(f'{name}: live reload rejected: result {int(result[1])}; SD bytes remain published')
+        print(f'{name}: live reload accepted for {int(result[2])} presets', flush=True)
+
     def wait_startup(self):
         self.read_until(rb'kest>', 30)
         self.uart.write(b'\r')
@@ -75,6 +83,8 @@ def main():
     parser.add_argument('--verified', type=Path, required=True, help='effect_library.py output directory')
     parser.add_argument('--log', type=Path, required=True)
     parser.add_argument('--replace', action='store_true')
+    parser.add_argument('--reload', action='store_true',
+                        help='reload each verified file into its already-loaded cname; DSP state restarts')
     parser.add_argument('effects', type=Path, nargs='+')
     args = parser.parse_args()
     records = json.loads((args.verified / 'results.json').read_text())
@@ -103,6 +113,8 @@ def main():
                                     re.findall(rb'KEST eff-file data=([0-9a-f]+)', reply))
                 if result == 0 and existing == data:
                     print(f'{name}: already identical', flush=True)
+                    if args.reload:
+                        console.reload(name)
                     continue
                 if result == 0 and not args.replace:
                     raise RuntimeError(f'{name}: exists with different bytes; use --replace deliberately')
@@ -125,6 +137,8 @@ def main():
                 if result or actual != data:
                     raise RuntimeError(f'{name}: byte readback mismatch')
                 print(f'{name}: published and verified {len(data)} bytes', flush=True)
+                if args.reload:
+                    console.reload(name)
         finally:
             console.uart.close()
 

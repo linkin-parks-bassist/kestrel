@@ -1,0 +1,38 @@
+v1.0
+.INFO
+description: "Sine-shaped volume modulation with adjustable rate and depth; zero depth keeps the dry signal."
+keywords: {"tremolo", "volume", "amplitude modulation", "sine", "rate", "depth"}
+instruments: {"bass"}
+types: {"modulation", "tremolo"}
+name: "Bass Tremolo"
+.PARAMETERS
+rate: (name: "Rate", default: 4, min: 0.1, max: 12, units: "Hz", scale: "logarithmic")
+depth: (name: "Depth", default: 0.6, min: 0, max: 1)
+.RESOURCES
+subphase: (type: "mem")
+phase: (type: "mem")
+wave: (type: "polynomial", coefs: {0, 3.1401887343, 0, -5.1363218456, 0, 2.4271414428, 0, -0.4310083315})
+
+.CODE
+mem_read $subphase c1
+add c1 [rate*128/sample_rate] c1
+max c1 [0.25] c2
+sub c2 [0.25] c2
+min c2 [1/32768] c2
+mul c2 [128] c2
+mul c2 [128] c2
+sub c1 c2 c1
+mem_write c1 $subphase
+mem_read $phase c3
+madd c2 [1/256] c3 c3
+max c3 [0.25] c4
+sub c4 [0.25] c4
+min c4 [1/32768] c4
+mul c4 [128] c4
+mul c4 [128] c4
+sub c3 c4 c3
+mem_write c3 $phase
+mul c3 [4] c4
+poly c4 $wave c4
+madd c4 [depth/2] [-depth/2] c5
+madd c0 c5 c0 c0

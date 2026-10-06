@@ -1,6 +1,10 @@
 v1.0
 
 .INFO
+description: "Resonant band-pass filter with center frequency and resonance controls."
+keywords: {"band pass", "bandpass", "band-pass", "center frequency", "resonance"}
+instruments: {"bass"}
+types: {"filter"}
 name: "SVF Band Pass"
 
 .PARAMETERS

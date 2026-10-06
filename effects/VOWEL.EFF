@@ -1,6 +1,10 @@
 v1.0
 
 .INFO
+description: "Manually move two resonant bands over dry bass for subtle formant coloration."
+keywords: {"formant", "vowel", "two bands", "resonance", "manual sweep", "dry bass"}
+instruments: {"bass"}
+types: {"filter"}
 name: "Talking Vowel"
 
 .PARAMETERS

@@ -1,0 +1,50 @@
+v1.0
+
+.INFO
+description: "Tempo-based paired echoes with a subdivision selector, damped feedback and wet/dry mix."
+keywords: {"rhythmic delay", "tempo", "BPM", "subdivision", "dotted echo", "feedback", "damping"}
+instruments: {"bass"}
+types: {"delay"}
+name: "Bass Rhythm"
+cname: "bass_rhythm_120"
+
+.SETTINGS
+tempo: (name: "Tempo", type: "int", default: 120, min: 30, max: 300, units: "BPM", page: "main")
+division: (name: "Subdivision", type: "enum", default: 24, min: 6, max: 96, page: "main", options: (
+    whole: (name: "Whole", value: 96),
+    half: (name: "Half", value: 48),
+    quarter: (name: "Quarter", value: 24),
+    dotted_eighth: (name: "Dotted eighth", value: 18),
+    quarter_triplet: (name: "Quarter triplet", value: 16),
+    eighth: (name: "Eighth", value: 12),
+    sixteenth: (name: "Sixteenth", value: 6)
+))
+
+.PARAMETERS
+feedback: (name: "Feedback", default: 0.5, min: 0, max: 0.8)
+mix: (name: "Mix", default: 0.25, min: 0, max: 0.65)
+damping: (name: "Damping", default: 2500, min: 80, max: 12000, units: "Hz", scale: "logarithmic")
+
+.DEFS
+damp_a: 1/(1+2*pi*damping/sample_rate)
+
+.RESOURCES
+quarter: (type: "delay", delay_samples: sample_rate*60/tempo*division/24, size: 4)
+dotted: (type: "delay", delay_samples: sample_rate*45/tempo*division/24, size: 4)
+dark: (type: "mem")
+
+.CODE
+delay_read $quarter c1
+delay_read $dotted c2
+mul c1 [0.5] c3
+madd c2 [0.5] c3 c3
+mem_read $dark c6
+mul c6 [damp_a] c6
+madd c3 [1-damp_a] c6 c3
+mem_write c3 $dark
+mul c0 [1-feedback] c4
+madd c3 [feedback] c4 c4
+delay_write c4 $quarter
+delay_write c4 $dotted
+mul c0 [1-mix] c5
+madd c3 [mix] c5 c0

@@ -1,0 +1,140 @@
+[
+  {
+    "command": "ui-tree",
+    "expect": "(?s)text=Presets.*KEST tree end",
+    "wait_ms": 0
+  },
+  {
+    "command": "pools",
+    "expect": "(?s)name=kest_dsp_resource[^\\r\\n]*used=4.*name=kest_parameter[^\\r\\n]*used=6.*name=kest_effect size=[^\\r\\n]*used=2.*name=kest_preset[^\\r\\n]*used=7.*KEST pools end",
+    "wait_ms": 0
+  },
+  {
+    "command": "presets",
+    "expect": "KEST presets count=7 end"
+  },
+  {
+    "command": "tap 360 1180",
+    "expect": "KEST touch queued",
+    "wait_ms": 300
+  },
+  {
+    "command": "pools",
+    "expect": "(?s)name=kest_preset[^\\r\\n]*used=8.*KEST pools end",
+    "wait_ms": 0
+  },
+  {
+    "command": "tap 360 475",
+    "expect": "KEST touch queued",
+    "wait_ms": 300
+  },
+  {
+    "command": "tap 360 1180",
+    "expect": "KEST touch queued",
+    "wait_ms": 300
+  },
+  {
+    "command": "ui-tree",
+    "expect": "(?s)text=Bass Flange.*KEST tree end",
+    "wait_ms": 0
+  },
+  {
+    "command": "tap 360 716",
+    "expect": "KEST touch queued",
+    "wait_ms": 300
+  },
+  {
+    "command": "tap 150 1180",
+    "expect": "KEST touch queued",
+    "wait_ms": 300
+  },
+  {
+    "command": "dsp",
+    "expect": "KEST dsp effect=0 name=Bass Flange blocks=27",
+    "wait_ms": 500
+  },
+  {
+    "command": "pools",
+    "expect": "(?s)name=kest_dsp_resource[^\\r\\n]*used=8.*name=kest_parameter[^\\r\\n]*used=10.*name=kest_effect size=[^\\r\\n]*used=3.*KEST pools end",
+    "wait_ms": 0
+  },
+  {
+    "command": "fpga-status",
+    "expect": "KEST fpga-status raw=0x01 initialized=1[^\\r\\n]*timeout=0 programming=0 bad=0[^\\r\\n]*cmd_err=0 swapping=0",
+    "wait_ms": 0
+  },
+  {
+    "command": "touch down 360 225",
+    "expect": "KEST touch queued",
+    "wait_ms": 1200
+  },
+  {
+    "command": "touch up",
+    "expect": "KEST touch queued",
+    "wait_ms": 100
+  },
+  {
+    "command": "tap 556 225",
+    "expect": "KEST touch queued",
+    "wait_ms": 300
+  },
+  {
+    "command": "pools",
+    "expect": "(?s)name=kest_dsp_resource[^\\r\\n]*used=4.*name=kest_parameter[^\\r\\n]*used=6.*name=kest_effect size=[^\\r\\n]*used=2.*KEST pools end",
+    "wait_ms": 0
+  },
+  {
+    "command": "tap 60 50",
+    "expect": "KEST touch queued",
+    "wait_ms": 300
+  },
+  {
+    "command": "tap 360 225",
+    "expect": "KEST touch queued",
+    "wait_ms": 300
+  },
+  {
+    "command": "tap 150 1180",
+    "expect": "KEST touch queued",
+    "wait_ms": 300
+  },
+  {
+    "command": "dsp",
+    "expect": "KEST dsp effect=0 name=Talking Vowel blocks=7",
+    "wait_ms": 500
+  },
+  {
+    "command": "tap 60 50",
+    "expect": "KEST touch queued",
+    "wait_ms": 300
+  },
+  {
+    "command": "touch down 360 475",
+    "expect": "KEST touch queued",
+    "wait_ms": 1200
+  },
+  {
+    "command": "touch up",
+    "expect": "KEST touch queued",
+    "wait_ms": 100
+  },
+  {
+    "command": "tap 556 475",
+    "expect": "KEST touch queued",
+    "wait_ms": 300
+  },
+  {
+    "command": "pools",
+    "expect": "(?s)name=kest_dsp_resource[^\\r\\n]*used=4.*name=kest_parameter[^\\r\\n]*used=6.*name=kest_effect size=[^\\r\\n]*used=2.*name=kest_preset[^\\r\\n]*used=7.*KEST pools end",
+    "wait_ms": 0
+  },
+  {
+    "command": "presets",
+    "expect": "KEST presets count=7 end"
+  },
+  {
+    "command": "ui-tree",
+    "expect": "(?s)text=Presets.*KEST tree end",
+    "wait_ms": 0
+  }
+]

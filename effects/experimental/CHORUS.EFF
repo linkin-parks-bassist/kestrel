@@ -1,0 +1,46 @@
+v1.0
+
+.INFO
+description: "A slowly moving short delay blended with dry input, with sweep and depth controls."
+keywords: {"chorus", "short delay", "sweep", "depth", "wet dry"}
+instruments: {"bass"}
+types: {"modulation", "delay", "chorus"}
+name: "Bass Chorus"
+
+.PARAMETERS
+rate: (name: "Sweep", default: 0.8, min: 0.1, max: 3, units: "Hz", scale: "logarithmic")
+depth: (name: "Depth", default: 6, min: 0.2, max: 10, units: "ms")
+mix: (name: "Mix", default: 0.25, min: 0, max: 0.5)
+
+.RESOURCES
+subphase: (type: "mem")
+phase: (type: "mem")
+wave: (type: "polynomial", coefs: {0, 3.1401887343, 0, -5.1363218456, 0, 2.4271414428, 0, -0.4310083315})
+line: (type: "delay", delay_samples: 12*sample_rate/1000, size: 1024)
+
+.CODE
+mem_read $subphase c1
+add c1 [rate*128/sample_rate] c1
+max c1 [0.25] c2
+sub c2 [0.25] c2
+min c2 [1/32768] c2
+mul c2 [128] c2
+mul c2 [128] c2
+sub c1 c2 c1
+mem_write c1 $subphase
+mem_read $phase c3
+madd c2 [1/256] c3 c3
+max c3 [0.25] c4
+sub c4 [0.25] c4
+min c4 [1/32768] c4
+mul c4 [128] c4
+mul c4 [128] c4
+sub c3 c4 c3
+mem_write c3 $phase
+mul c3 [4] c4
+poly c4 $wave c4
+madd c4 [0.5] [0.5] c4
+delay_mread $line c4 [depth*sample_rate/(1000*1024)] c5
+delay_write c0 $line
+mul c0 [1-mix] c7
+madd c5 [mix] c7 c0

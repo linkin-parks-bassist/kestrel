@@ -1,0 +1,14 @@
+---
+status: green
+revised_at: "2026-10-06T10:27:14+11:00"
+---
+
+effects/experimental/CROWD.EFF is an unaccepted five-voice bass-chorus prototype, separate from CHORUS.EFF. Decoding confirms 134 blocks, five polynomial calls, five modulated-delay reads and one delay write. Voices share a padded 2052-word buffer with an 8-ms base tap. Four scratchpad states hold fine/coarse phase, rectified envelope and wet-return low-pass state.
+
+Controls: Sweep 0.1–3 Hz (default 0.45), Depth 0–8 ms (2.5), Spread 0–1 (0.8), Spacing 0–8 ms (5), Feel 0–1 (0.7), Voices 0–1 (0.35), Dry 0–1 (1). Spread offsets phases; Spacing separates taps. Feel blends fixed and envelope-sensitive depth using smoothed rectified input. Five averaged voices are high-passed through a 150-Hz complementary one-pole and added to explicit dry; defaults retain unity dry.
+
+Run python3 tools/test_eff_crowd.py for compiler/model/actual-core comparison, topology, dry identity, silence, settled DC, bass level and contrasts. Seven cases pass 410092 exact samples at 1612 cycles/sample; all seven topologies checked independently. Default synthetic E-bass gain 1.00133/change 0.08546/peak 7473; disabling Feel contrast 0.03893, coincident phase/taps contrast 0.14690. Extreme gain 0.97542/change 0.21661. Numeric change does not establish compelling sound. Core-strobe excludes physical SDRAM/arbitration, SPI/mixer/codecs and listening. Integer taps lack interpolation.
+
+Source and SD include description/keywords/instruments/types: 3810 bytes, SHA-256 be67da8737394f10c1acbb83cf03763e053cdfe4c3a05eb128eeeaea4b4fb7ca. Its default program is unchanged. Exact SD bytes and loaded fields are verified in /tmp/kestrel-library-metadata-deployment-result.json; the fresh default render matches 132300 samples (/tmp/kestrel-experimental-discovery-metadata/results.json). The earlier carrier readback/activation qualifies the identical DSP program (/tmp/kestrel-crowd-upload.log). Subsequent startup discovers 23 descriptors (/tmp/kestrel-rhythm-damped-persistence.log). Normal UI activation reports 134 blocks, seven dials and running phase state. UART targets converge to all seven tested endpoints and return to defaults; rate 3.1 and depth −1 reject. Active reload affects one preset and preserves defaults. Temporary Preset 10 removal and restart restore nine presets/four main members and all pool counts, with Swamp active and status 0x01 (/tmp/kestrel-crowd-{controls-live,cleanup-restart}.log). These observations qualify firmware state, not numerical FPGA coefficient delivery or audible response. Listening remains open.
+
+Evidence: descriptor, tools/test_eff_crowd.py, /tmp/kestrel-crowd/results.json, per-case program/result/PCM/WAV and /tmp/kestrel-crowd-tests.log. Running-code metadata was normalized from completed case order/PCM; later topology assertions ran independently without repeating RTL.

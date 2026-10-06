@@ -1,0 +1,60 @@
+v1.0
+
+.INFO
+description: "Paired detuned delay cavities with damped, driven wavefolding feedback and an independent dry path."
+keywords: {"wavefolding", "feedback", "detune", "cavity", "delay", "damping", "nonlinear"}
+instruments: {"bass"}
+types: {"delay", "distortion"}
+name: "Fault Choir"
+cname: "fault_choir"
+
+.PARAMETERS
+time: (name: "Cavity", default: 17, min: 2, max: 100, units: "ms")
+split: (name: "Detune", default: 0.37, min: 0, max: 1)
+feedback: (name: "Memory", default: 0.72, min: 0, max: 0.9)
+drive: (name: "Pressure", default: 3, min: 1, max: 12)
+fold: (name: "Fracture", default: 0.22, min: 0.05, max: 0.5)
+damping: (name: "Ash", default: 3500, min: 100, max: 12000, units: "Hz", scale: "logarithmic")
+mix: (name: "Choir", default: 0.8, min: 0, max: 2)
+dry: (name: "Dry", default: 1, min: 0, max: 1)
+
+.DEFS
+pole: 1/(1+2*pi*damping/sample_rate)
+
+.RESOURCES
+first: (type: "delay", delay_samples: time*sample_rate/1000, size: 4)
+second: (type: "delay", delay_samples: time*(0.5+0.45*split)*sample_rate/1000, size: 4)
+dark: (type: "mem")
+
+.CODE
+delay_read $first c1
+delay_read $second c2
+mul c1 [0.5] c3
+madd c2 [-0.5] c3 c3
+mem_read $dark c4
+mul c4 [pole] c4
+madd c3 [1-pole] c4 c3
+mem_write c3 $dark
+mul c0 [1-feedback] c4
+madd c3 [feedback] c4 c4
+mul c4 [drive] c4
+add c4 [fold] c5
+max c5 [-32767/32768] c5
+abs c5 c5
+sub c4 [fold] c6
+max c6 [-32767/32768] c6
+abs c6 c6
+sub c5 c6 c5
+sub c5 c4 c4
+add c4 [fold] c5
+max c5 [-32767/32768] c5
+abs c5 c5
+sub c4 [fold] c6
+max c6 [-32767/32768] c6
+abs c6 c6
+sub c5 c6 c5
+sub c5 c4 c4
+delay_write c4 $first
+delay_write c4 $second
+mul c0 [dry] c7
+madd c3 [mix] c7 c0

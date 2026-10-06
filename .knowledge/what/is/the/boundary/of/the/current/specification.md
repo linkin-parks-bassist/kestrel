@@ -1,9 +1,12 @@
 ---
-status: "unverified"
-created_at: "2026-09-20T00:08:43+10:00"
-scope: "local"
-source: "README.md; kestrel_interface/README.md; kestrel_core/README.md; user clarification 2026-09-20"
+status: green
+revised_at: "2026-10-03T23:14:20+10:00"
 ---
-Status: Green
 
-The READMEs and code describe implemented and intended behavior, but no complete formal product specification or the owner’s unwritten ideas are in this checkout. A future spec workshop must elicit goals and priorities from the owner; agents should not promote old README future-plan text into approved requirements. Source: README.md; kestrel_interface/README.md; kestrel_core/README.md; user clarification 2026-09-20
+The READMEs and code describe implemented and intended behaviour, but are not a complete formal product specification. David's next-revision hardware requirements are owned by what/is/the/single/board/and/enclosure/design/brief.md. They supersede carrier-module assumptions as the desired direction, not as a description of existing hardware.
+
+David has also supplied partial firmware and RTL requirements. The Interface and Core trees' what/is/the/spec.md leaves own those component intentions, and this superproject's what/is/the/effect/verification/specification.md owns the shared automated tests, lightweight DSP simulation, one-pipeline RTL verification and physical HIL goals. They are requirements and design candidates, not claims of completed implementation.
+
+The specification remains open: allocation boundaries, effect-refresh lifecycle, debug-command details, simulator fidelity/acceptance and DSP optimization/post-processing contracts need refinement, and further RTL intentions remain to be elicited. Ask for goals, priorities and acceptance criteria rather than promoting old README ambitions or proposed mechanisms into settled requirements.
+
+Sources: project READMEs and David's explicit hardware and firmware/RTL instructions.

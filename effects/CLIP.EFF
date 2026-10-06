@@ -1,6 +1,10 @@
 v1.0
 
 .INFO
+description: "Hard clipping with adjustable input drive and clipping ceiling."
+keywords: {"hard clip", "clipping", "drive", "ceiling", "distortion"}
+instruments: {"bass"}
+types: {"distortion"}
 name: "Hard Clip"
 
 .PARAMETERS

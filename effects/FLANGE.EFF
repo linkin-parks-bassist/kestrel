@@ -1,6 +1,10 @@
 v1.0
 
 .INFO
+description: "Slow swept delay comb with feedback and a wet/dry mix."
+keywords: {"flanger", "comb", "sweep", "feedback", "short delay", "wet dry"}
+instruments: {"bass"}
+types: {"modulation", "delay"}
 name: "Bass Flange"
 
 .PARAMETERS

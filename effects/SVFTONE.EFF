@@ -1,6 +1,10 @@
 v1.0
 
 .INFO
+description: "Blend low-pass and high-pass signals; the middle blend creates a notch around the split."
+keywords: {"tone", "brightness", "low pass", "high pass", "blend", "notch"}
+instruments: {"bass"}
+types: {"filter"}
 name: "SVF Tone Blend"
 
 .PARAMETERS

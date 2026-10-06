@@ -1,6 +1,10 @@
 v1.0
 
 .INFO
+description: "Cubic waveshaping with input drive and output level controls."
+keywords: {"cubic", "waveshaping", "soft clip", "drive", "level"}
+instruments: {"bass"}
+types: {"distortion"}
 name: "Cubic Drive"
 
 .PARAMETERS

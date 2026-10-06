@@ -1,6 +1,10 @@
 v1.0
 
 .INFO
+description: "Driven rectifier harmonics with DC removal, low-pass tone and output level controls."
+keywords: {"octave", "fuzz", "rectifier", "harmonics", "DC removal", "tone"}
+instruments: {"bass"}
+types: {"distortion", "octave"}
 name: "Octave Fuzz"
 
 .PARAMETERS

@@ -1,6 +1,10 @@
 v1.0
 
 .INFO
+description: "Two-pole resonant high-pass filter with cutoff and resonance controls."
+keywords: {"high pass", "highpass", "high-pass", "cutoff", "resonance", "two pole"}
+instruments: {"bass"}
+types: {"filter"}
 name: "SVF High Pass"
 
 .PARAMETERS

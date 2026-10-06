@@ -1,0 +1,194 @@
+[
+  {
+    "command": "ui-tree",
+    "expect": "(?s)text=Presets.*KEST tree end",
+    "wait_ms": 0
+  },
+  {
+    "command": "presets",
+    "expect": "KEST presets count=7 end",
+    "wait_ms": 0
+  },
+  {
+    "command": "tap 360 1180",
+    "expect": "KEST touch queued",
+    "wait_ms": 300
+  },
+  {
+    "command": "tap 360 475",
+    "expect": "KEST touch queued",
+    "wait_ms": 300
+  },
+  {
+    "command": "tap 360 1180",
+    "expect": "KEST touch queued",
+    "wait_ms": 300
+  },
+  {
+    "command": "ui-tree",
+    "expect": "(?s)x=242 y=1051[^\\r\\n]*text=Polynomial Probe.*KEST tree end",
+    "wait_ms": 0
+  },
+  {
+    "command": "tap 360 1065",
+    "expect": "KEST touch queued",
+    "wait_ms": 300
+  },
+  {
+    "command": "tap 150 1180",
+    "expect": "KEST touch queued",
+    "wait_ms": 300
+  },
+  {
+    "command": "dsp",
+    "expect": "(?s)KEST dsp preset=8.*name=Polynomial Probe blocks=6.*parameter=8\\.0\\.0 name=shape.*resource=probe[^\\r\\n]*latest=-1024[\\r\\n]",
+    "wait_ms": 0
+  },
+  {
+    "command": "fpga-read 0",
+    "expect": "KEST fpga-read addr=0 raw=64512[\\r\\n]",
+    "wait_ms": 0
+  },
+  {
+    "command": "tap 360 225",
+    "expect": "KEST touch queued",
+    "wait_ms": 300
+  },
+  {
+    "command": "parameter-target 8 0 0 0.5",
+    "expect": "KEST parameter-target id=8\\.0\\.0[^\\r\\n]*result=0 reason=queued",
+    "wait_ms": 500
+  },
+  {
+    "command": "dsp",
+    "expect": "(?s)name=Polynomial Probe blocks=6.*resource=probe[^\\r\\n]*latest=8192[\\r\\n]"
+  },
+  {
+    "command": "fpga-read 0",
+    "expect": "KEST fpga-read addr=0 raw=8192[\\r\\n]"
+  },
+  {
+    "command": "parameter-target 8 0 0 -0.5",
+    "expect": "KEST parameter-target id=8\\.0\\.0[^\\r\\n]*result=0 reason=queued",
+    "wait_ms": 500
+  },
+  {
+    "command": "dsp",
+    "expect": "(?s)name=Polynomial Probe blocks=6.*resource=probe[^\\r\\n]*latest=-16384[\\r\\n]"
+  },
+  {
+    "command": "fpga-read 0",
+    "expect": "KEST fpga-read addr=0 raw=49152[\\r\\n]"
+  },
+  {
+    "command": "parameter-target 8 0 0 0",
+    "expect": "KEST parameter-target id=8\\.0\\.0[^\\r\\n]*result=0 reason=queued",
+    "wait_ms": 500
+  },
+  {
+    "command": "dsp",
+    "expect": "(?s)name=Polynomial Probe blocks=6.*resource=probe[^\\r\\n]*latest=-4096[\\r\\n]"
+  },
+  {
+    "command": "fpga-read 0",
+    "expect": "KEST fpga-read addr=0 raw=61440[\\r\\n]"
+  },
+  {
+    "command": "parameter-target 8 0 0 0.5",
+    "expect": "KEST parameter-target id=8\\.0\\.0[^\\r\\n]*result=0 reason=queued",
+    "wait_ms": 500
+  },
+  {
+    "command": "dsp",
+    "expect": "(?s)name=Polynomial Probe blocks=6.*resource=probe[^\\r\\n]*latest=8192[\\r\\n]"
+  },
+  {
+    "command": "fpga-read 0",
+    "expect": "KEST fpga-read addr=0 raw=8192[\\r\\n]"
+  },
+  {
+    "command": "fpga-status",
+    "expect": "KEST fpga-status raw=0x01 initialized=1[^\\r\\n]*timeout=0 programming=0 bad=0[^\\r\\n]*cmd_err=0 swapping=0",
+    "wait_ms": 0
+  },
+  {
+    "command": "tap 60 50",
+    "expect": "KEST touch queued",
+    "wait_ms": 300
+  },
+  {
+    "command": "touch down 360 225",
+    "expect": "KEST touch queued",
+    "wait_ms": 1200
+  },
+  {
+    "command": "touch up",
+    "expect": "KEST touch queued",
+    "wait_ms": 300
+  },
+  {
+    "command": "tap 556 225",
+    "expect": "KEST touch queued",
+    "wait_ms": 300
+  },
+  {
+    "command": "tap 60 50",
+    "expect": "KEST touch queued",
+    "wait_ms": 300
+  },
+  {
+    "command": "tap 360 225",
+    "expect": "KEST touch queued",
+    "wait_ms": 300
+  },
+  {
+    "command": "tap 150 1180",
+    "expect": "KEST touch queued",
+    "wait_ms": 300
+  },
+  {
+    "command": "dsp",
+    "expect": "KEST dsp effect=0 name=Talking Vowel blocks=7",
+    "wait_ms": 0
+  },
+  {
+    "command": "tap 60 50",
+    "expect": "KEST touch queued",
+    "wait_ms": 300
+  },
+  {
+    "command": "touch down 360 475",
+    "expect": "KEST touch queued",
+    "wait_ms": 1200
+  },
+  {
+    "command": "touch up",
+    "expect": "KEST touch queued",
+    "wait_ms": 300
+  },
+  {
+    "command": "tap 556 475",
+    "expect": "KEST touch queued",
+    "wait_ms": 300
+  },
+  {
+    "command": "presets",
+    "expect": "KEST presets count=7 end",
+    "wait_ms": 0
+  },
+  {
+    "command": "pools",
+    "expect": "(?s)name=kest_dsp_resource[^\\r\\n]*used=4.*name=kest_parameter[^\\r\\n]*used=6.*name=kest_effect size=[^\\r\\n]*used=2.*name=kest_preset[^\\r\\n]*used=7.*KEST pools end",
+    "wait_ms": 0
+  },
+  {
+    "command": "eff-file delete KTPOLY.EFF",
+    "expect": "KEST eff-file result=0 errno=0",
+    "wait_ms": 0
+  },
+  {
+    "command": "eff-file read KTPOLY.EFF",
+    "expect": "KEST eff-file result=-1 errno=2",
+    "wait_ms": 0
+  }
+]

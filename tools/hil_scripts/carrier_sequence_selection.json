@@ -1,0 +1,123 @@
+[
+  {
+    "command": "sequence-step next",
+    "expect": "KEST sequence-step result=1 preset=1"
+  },
+  {
+    "command": "ui-tree",
+    "expect": "(?s)text=Presets.*KEST tree end",
+    "wait_ms": 0
+  },
+  {
+    "command": "sequences",
+    "expect": "(?s)index=0 main=1 selected=0 active=0.*member index=0 position=0 preset=1 current=0 active=1.*member index=0 position=1 preset=2 current=0 active=0.*index=0 members=2 end.*KEST sequences count=1 end",
+    "wait_ms": 0
+  },
+  {
+    "command": "tap 150 1180",
+    "expect": "KEST touch queued",
+    "wait_ms": 500
+  },
+  {
+    "command": "sequences",
+    "expect": "(?s)KEST sequence index=0 main=1 selected=1 active=1.*member index=0 position=0 preset=1 current=1 active=1.*member index=0 position=1 preset=2 current=0 active=0.*index=0 members=2 end.*KEST sequences count=1 end",
+    "wait_ms": 0
+  },
+  {
+    "command": "tap 360 350",
+    "expect": "KEST touch queued",
+    "wait_ms": 300
+  },
+  {
+    "command": "ui-tree",
+    "expect": "(?s)text=Preset 2.*KEST tree end",
+    "wait_ms": 0
+  },
+  {
+    "command": "tap 150 1180",
+    "expect": "KEST touch queued",
+    "wait_ms": 500
+  },
+  {
+    "command": "sequences",
+    "expect": "(?s)KEST sequence index=0 main=1 selected=1 active=1.*member index=0 position=0 preset=1 current=0 active=0.*member index=0 position=1 preset=2 current=1 active=1.*index=0 members=2 end.*KEST sequences count=1 end",
+    "wait_ms": 0
+  },
+  {
+    "command": "sequence-step next",
+    "expect": "KEST sequence-step result=0 preset=2",
+    "wait_ms": 300
+  },
+  {
+    "command": "sequence-step prev",
+    "expect": "KEST sequence-step result=0 preset=1",
+    "wait_ms": 500
+  },
+  {
+    "command": "sequences",
+    "expect": "(?s)KEST sequence index=0 main=1 selected=1 active=1.*member index=0 position=0 preset=1 current=1 active=1.*member index=0 position=1 preset=2 current=0 active=0.*index=0 members=2 end.*KEST sequences count=1 end"
+  },
+  {
+    "command": "dsp",
+    "expect": "KEST dsp effect=0 name=Talking Vowel blocks=7"
+  },
+  {
+    "command": "sequence-step next",
+    "expect": "KEST sequence-step result=0 preset=2",
+    "wait_ms": 500
+  },
+  {
+    "command": "sequences",
+    "expect": "(?s)KEST sequence index=0 main=1 selected=1 active=1.*member index=0 position=0 preset=1 current=0 active=0.*member index=0 position=1 preset=2 current=1 active=1.*index=0 members=2 end.*KEST sequences count=1 end"
+  },
+  {
+    "command": "dsp",
+    "expect": "KEST dsp preset=2",
+    "wait_ms": 0
+  },
+  {
+    "command": "fpga-status",
+    "expect": "KEST fpga-status raw=0x01 initialized=1[^\\r\\n]*timeout=0 programming=0 bad=0[^\\r\\n]*cmd_err=0 swapping=0",
+    "wait_ms": 0
+  },
+  {
+    "command": "tap 60 50",
+    "expect": "KEST touch queued",
+    "wait_ms": 300
+  },
+  {
+    "command": "tap 360 225",
+    "expect": "KEST touch queued",
+    "wait_ms": 300
+  },
+  {
+    "command": "tap 150 1180",
+    "expect": "KEST touch queued",
+    "wait_ms": 500
+  },
+  {
+    "command": "sequences",
+    "expect": "(?s)KEST sequence index=0 main=1 selected=1 active=1.*member index=0 position=0 preset=1 current=1 active=1.*member index=0 position=1 preset=2 current=0 active=0.*index=0 members=2 end.*KEST sequences count=1 end",
+    "wait_ms": 0
+  },
+  {
+    "command": "dsp",
+    "expect": "KEST dsp effect=0 name=Talking Vowel blocks=7",
+    "wait_ms": 0
+  },
+  {
+    "command": "sequence-step prev",
+    "expect": "KEST sequence-step result=0 preset=1",
+    "wait_ms": 300
+  },
+  {
+    "command": "tap 60 50",
+    "expect": "KEST touch queued",
+    "wait_ms": 300
+  },
+  {
+    "command": "pools",
+    "expect": "(?s)name=kest_dsp_resource[^\\r\\n]*used=4.*name=kest_parameter[^\\r\\n]*used=6.*name=kest_effect size=[^\\r\\n]*used=2.*name=kest_preset[^\\r\\n]*used=7.*KEST pools end",
+    "wait_ms": 0
+  }
+]

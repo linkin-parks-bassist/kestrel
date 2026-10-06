@@ -131,6 +131,14 @@ cutoff_octave_up: cutoff * 2
     <h2><code>.INFO</code></h2>
     <p>The <code>.INFO</code> section is mandatory. It must contain <code>name</code>, a string shown as the effect name. It may also contain <code>cname</code>, the ``code name'', which is used internally to refer to the effect (i.e., a preset uses the cname of its effects to find the .eff file on disc at boot). If <code>cname</code> is omitted, the parser derives one from <code>name</code> by lowercasing capital letters and turning spaces into underscores. </p>
 
+    <p>Optional discovery fields are <code>description</code> (a string) and <code>keywords</code>, <code>instruments</code>, <code>types</code>, and <code>genres</code> (lists of strings). For example:</p>
+    <pre>description: "Rhythmic echoes that fracture into interacting voices."
+keywords: {"rhythmic", "feedback", "fracture"}
+instruments: {"bass", "guitar"}
+types: {"delay", "modulation"}
+genres: {"ambient", "noise"}</pre>
+    <p>These fields are optional; existing files continue to load. Empty lists are allowed, and a trailing comma is unnecessary. The descriptor retains the full strings, list order and duplicates exactly as authored, independently of the parser arena. Known fields with other value types are rejected. This metadata does not change the DSP program. The discovery search/filter UI is still planned.</p>
+
     <h2><code>.PARAMETERS</code></h2>
     <p>Parameters are the continuous controls the player adjusts on the effect page: gain, cutoff, feedback, mix, depth, rate, and so on. Each entry in <code>.PARAMETERS</code> is a nested dictionary. The entry name is the internal handle used in expressions and code, while the required <code>name</code> field is the display label. The current extractor requires <code>name</code>, <code>default</code>, <code>min</code>, and <code>max</code>. The default must be a constant expression; the range endpoints may be expressions, which lets one control bound depend on another if the UI behavior needs it.</p>
 
@@ -169,7 +177,9 @@ mix: (
 </code></pre>
 
     <h2><code>.SETTINGS</code></h2>
-    <p>Settings are discrete controls rather than smooth parameters. The current extractor requires <code>name</code>, <code>type</code>, <code>default</code>, <code>min</code>, and <code>max</code>. Accepted types are <code>"int"</code>, <code>"bool"</code>, and <code>"enum"</code>; accepted pages are <code>"main"</code> and <code>"settings"</code>. In the current code, integer and boolean settings are the safest choices. The parser accepts an <code>options</code> dictionary for enums, but the extractor marks that area as unfinished, so treat custom enum option lists as a future-facing feature rather than the comfortable path today.</p>
+    <p>Numeric defaults and bounds must evaluate to finite integers representable by the setting's integer storage. Bounds must be ordered and contain the default. Expression evaluation uses float precision.</p>
+    <p>Settings are discrete controls rather than smooth parameters. The extractor requires <code>name</code>, <code>type</code>, <code>default</code>, <code>min</code>, and <code>max</code>. Types are <code>"int"</code>, <code>"bool"</code>, and <code>"enum"</code>; pages are <code>"main"</code> and <code>"settings"</code>.</p>
+    <p>An enum requires a nonempty <code>options</code> dictionary whose entries each contain a display <code>name</code> and constant integer <code>value</code>. Choices appear in declaration order. Values and labels must be unique; values must fit the bounds and 0–32767. The default must be a listed value. Labels must be nonempty, shorter than 128 bytes and contain no line breaks. Other setting types reject <code>options</code>.</p>
 
 <pre><code>.SETTINGS
 mode: (
@@ -188,8 +198,22 @@ bypass_tone: (
   min: 0
   max: 1
 )
+
+division: (
+  name: "Subdivision"
+  type: "enum"
+  default: 4
+  min: 0
+  max: 9
+  page: "main"
+  options: (
+    quarter: (name: "Quarter", value: 4)
+    dotted: (name: "Dotted eighth", value: 9)
+  )
+)
 </code></pre>
 
+    <p>The installed carrier firmware includes enum extraction. End-to-end setting delivery and tempo-driven resource rebuilding remain to qualify.</p>
     <h2><code>.RESOURCES</code></h2>
     <p>Resources are named pieces of FPGA-side or firmware-managed DSP support that an instruction can use later. Each resource is a nested dictionary with a required <code>type</code>. The current resource extractor recognizes <code>"delay"</code>, <code>"mem"</code>, <code>"filter"</code>, <code>"lpf"</code>, <code>"hpf"</code>, <code>"bpf"</code>, <code>"polynomial"</code>, and <code>"lfo"</code>. In <code>.CODE</code>, resources are referenced with a dollar sign, as in <code>$delay_line</code> or <code>$tone_filter</code>.</p>
 

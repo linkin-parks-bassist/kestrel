@@ -1,0 +1,212 @@
+v1.0
+
+.INFO
+name: "Spectral Spiral"
+cname: "spectral_spiral"
+description: "Quadrature all-pass paths and polynomial carriers shift harmonics by a fixed frequency on each damped feedback repeat."
+keywords: {"frequency shift", "single sideband", "quadrature", "inharmonic", "feedback", "spiral", "echo"}
+instruments: {"bass"}
+types: {"modulation", "delay", "frequency shifter"}
+
+.PARAMETERS
+frequency: (name: "Drift", default: 17.5, min: -400, max: 400, units: "Hz")
+echo: (name: "Echo", default: 130, min: 0, max: 600, units: "ms")
+feedback: (name: "Memory", default: 0.72, min: 0, max: 0.85)
+mirror: (name: "Mirror", default: 0, min: 0, max: 1)
+damping: (name: "Dust", default: 8000, min: 200, max: 12000, units: "Hz", scale: "logarithmic")
+pressure: (name: "Drive", default: 1.5, min: 1, max: 4)
+wet: (name: "Ghosts", default: 1, min: 0, max: 2)
+dry: (name: "Dry", default: 1, min: 0, max: 1)
+
+.DEFS
+pole: 1/(1+2*pi*damping/sample_rate)
+
+.RESOURCES
+phase: (type: "mem")
+inphase: (type: "mem")
+dark: (type: "mem")
+wave: (type: "polynomial", coefs: {0, 3.1401887343, 0, -5.1363218456, 0, 2.4271414428, 0, -0.4310083315})
+loop: (type: "delay", delay_samples: 1, size: 32768)
+i0x1: (type: "mem")
+i0x2: (type: "mem")
+i0y1: (type: "mem")
+i0y2: (type: "mem")
+i1x1: (type: "mem")
+i1x2: (type: "mem")
+i1y1: (type: "mem")
+i1y2: (type: "mem")
+i2x1: (type: "mem")
+i2x2: (type: "mem")
+i2y1: (type: "mem")
+i2y2: (type: "mem")
+i3x1: (type: "mem")
+i3x2: (type: "mem")
+i3y1: (type: "mem")
+i3y2: (type: "mem")
+q0x1: (type: "mem")
+q0x2: (type: "mem")
+q0y1: (type: "mem")
+q0y2: (type: "mem")
+q1x1: (type: "mem")
+q1x2: (type: "mem")
+q1y1: (type: "mem")
+q1y2: (type: "mem")
+q2x1: (type: "mem")
+q2x2: (type: "mem")
+q2y1: (type: "mem")
+q2y2: (type: "mem")
+q3x1: (type: "mem")
+q3x2: (type: "mem")
+q3y1: (type: "mem")
+q3y2: (type: "mem")
+
+.CODE
+delay_mread $loop [1] [echo*sample_rate/(1000*32768)] c3
+mem_read $dark c4
+mul c4 [pole] c4
+madd c3 [1-pole] c4 c3
+mem_write c3 $dark
+mul c0 [pressure/4] c1
+madd c3 [feedback/4] c1 c1
+mul c1 [1] c2
+mem_read $i0x1 c4
+mem_read $i0x2 c5
+mem_write c4 $i0x2
+mem_write c1 $i0x1
+mem_read $i0y1 c6
+mem_read $i0y2 c7
+add c1 c7 c8
+clamp c8 [-1/32768] [1/32768] c9
+mul c8 [0.47940086558884] c8
+sub c8 c9 c8
+sub c8 c5 c1
+mem_write c6 $i0y2
+mem_write c1 $i0y1
+mem_read $i1x1 c4
+mem_read $i1x2 c5
+mem_write c4 $i1x2
+mem_write c1 $i1x1
+mem_read $i1y1 c6
+mem_read $i1y2 c7
+add c1 c7 c8
+clamp c8 [-1/32768] [1/32768] c9
+mul c8 [0.87621849353931] c8
+sub c8 c9 c8
+sub c8 c5 c1
+mem_write c6 $i1y2
+mem_write c1 $i1y1
+mem_read $i2x1 c4
+mem_read $i2x2 c5
+mem_write c4 $i2x2
+mem_write c1 $i2x1
+mem_read $i2y1 c6
+mem_read $i2y2 c7
+add c1 c7 c8
+clamp c8 [-1/32768] [1/32768] c9
+mul c8 [0.976597589508199] c8
+sub c8 c9 c8
+sub c8 c5 c1
+mem_write c6 $i2y2
+mem_write c1 $i2y1
+mem_read $i3x1 c4
+mem_read $i3x2 c5
+mem_write c4 $i3x2
+mem_write c1 $i3x1
+mem_read $i3y1 c6
+mem_read $i3y2 c7
+add c1 c7 c8
+clamp c8 [-1/32768] [1/32768] c9
+mul c8 [0.997499255935549] c8
+sub c8 c9 c8
+sub c8 c5 c1
+mem_write c6 $i3y2
+mem_write c1 $i3y1
+mem_read $q0x1 c4
+mem_read $q0x2 c5
+mem_write c4 $q0x2
+mem_write c2 $q0x1
+mem_read $q0y1 c6
+mem_read $q0y2 c7
+add c2 c7 c8
+clamp c8 [-1/32768] [1/32768] c9
+mul c8 [0.161758498367701] c8
+sub c8 c9 c8
+sub c8 c5 c2
+mem_write c6 $q0y2
+mem_write c2 $q0y1
+mem_read $q1x1 c4
+mem_read $q1x2 c5
+mem_write c4 $q1x2
+mem_write c2 $q1x1
+mem_read $q1y1 c6
+mem_read $q1y2 c7
+add c2 c7 c8
+clamp c8 [-1/32768] [1/32768] c9
+mul c8 [0.73302893234149] c8
+sub c8 c9 c8
+sub c8 c5 c2
+mem_write c6 $q1y2
+mem_write c2 $q1y1
+mem_read $q2x1 c4
+mem_read $q2x2 c5
+mem_write c4 $q2x2
+mem_write c2 $q2x1
+mem_read $q2y1 c6
+mem_read $q2y2 c7
+add c2 c7 c8
+clamp c8 [-1/32768] [1/32768] c9
+mul c8 [0.945349700329113] c8
+sub c8 c9 c8
+sub c8 c5 c2
+mem_write c6 $q2y2
+mem_write c2 $q2y1
+mem_read $q3x1 c4
+mem_read $q3x2 c5
+mem_write c4 $q3x2
+mem_write c2 $q3x1
+mem_read $q3y1 c6
+mem_read $q3y2 c7
+add c2 c7 c8
+clamp c8 [-1/32768] [1/32768] c9
+mul c8 [0.990599156684529] c8
+sub c8 c9 c8
+sub c8 c5 c2
+mem_write c6 $q3y2
+mem_write c2 $q3y1
+mem_read $inphase c3
+mem_write c1 $inphase
+mul c3 [1] c1
+mem_read $phase c3
+add c3 [frequency/sample_rate] c3
+max c3 [0.5] c4
+sub c4 [0.5] c4
+min c4 [1/32768] c4
+mul c4 [128] c4
+mul c4 [256] c4
+min c3 [-0.5] c5
+sub c5 [-0.5] c5
+max c5 [-1/32768] c5
+mul c5 [128] c5
+mul c5 [256] c5
+add c4 c5 c4
+sub c3 c4 c3
+mem_write c3 $phase
+mul c3 [2] c4
+poly c4 $wave c9
+add c3 [0.25] c3
+max c3 [0.5] c4
+sub c4 [0.5] c4
+min c4 [1/32768] c4
+mul c4 [128] c4
+mul c4 [256] c4
+sub c3 c4 c3
+mul c3 [2] c3
+poly c3 $wave cA
+mul c1 cA c1
+mul c2 c9 c2
+madd c2 [1-2*mirror] c1 c1
+mul c1 [4] c1
+clamp c1 [-0.95] [0.95] c1
+delay_write c1 $loop
+mul c0 [dry] c2
+madd c1 [wet] c2 c0

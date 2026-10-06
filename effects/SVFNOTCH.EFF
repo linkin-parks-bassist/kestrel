@@ -1,6 +1,10 @@
 v1.0
 
 .INFO
+description: "Notch filter that removes a band around the selected center frequency."
+keywords: {"notch", "band reject", "band stop", "center frequency", "width"}
+instruments: {"bass"}
+types: {"filter"}
 name: "SVF Notch"
 
 .PARAMETERS

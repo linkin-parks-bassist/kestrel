@@ -1,6 +1,10 @@
 v1.0
 
 .INFO
+description: "Cubic drive with low-pass tone shaping and output level control."
+keywords: {"drive", "cubic", "waveshaping", "soft clip", "tone", "low pass"}
+instruments: {"bass"}
+types: {"distortion"}
 name: "Warm Drive"
 
 .PARAMETERS

@@ -1,6 +1,10 @@
 v1.0
 
 .INFO
+description: "Multiply low and band-pass signals into an audio-rate cutoff filter, blended with dry input."
+keywords: {"cross modulation", "audio rate", "dynamic filter", "bands", "nonlinear", "mix"}
+instruments: {"bass"}
+types: {"distortion", "filter", "modulation"}
 name: "Cross Growl"
 
 .PARAMETERS

@@ -1,6 +1,10 @@
 v1.0
 
 .INFO
+description: "Multiply the input by a free-running bass-range sine carrier, with a compensated wet/dry mix."
+keywords: {"ring modulation", "ring mod", "sine carrier", "sidebands", "frequency", "wet dry"}
+instruments: {"bass"}
+types: {"modulation", "ring modulator"}
 name: "Bass Ring"
 
 .PARAMETERS

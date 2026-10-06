@@ -1,6 +1,10 @@
 v1.0
 
 .INFO
+description: "Four-pole low-pass filtering from two cascaded sections, with adjustable cutoff."
+keywords: {"low pass", "lowpass", "low-pass", "four pole", "cascade", "cutoff"}
+instruments: {"bass"}
+types: {"filter"}
 name: "SVF Low Pass 4"
 
 .PARAMETERS
